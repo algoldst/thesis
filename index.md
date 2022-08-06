@@ -53,7 +53,7 @@ Control of each subsystem is accomplished either by modifying the circuit direct
 
 The diagram below shows how all of these subsystems interact in a basic synthesizer. Notice the main signal path flows from oscillator → filter → amplifier, while the ADSR envelope is passed as an additional (optional) input to some of the subsystems.
 
-<img src="/res/synth-signal-flow.png" height=300 />
+<img src="res/synth-signal-flow.png" height=300 />
 
 _Typical synthesizer subsystems and signal flow._ [^mit_syw]*
 
@@ -83,7 +83,7 @@ Power and signal levels typically have the most impact to the overall system, so
 ## 2.1 A Basic Speaker Output Buffer
 The final output stage of our synth will be ready for a speaker to play, but throughout the design process, we'll want to listen to the signal that we have. Sometimes, this signal isn't safe for a speaker to play — for example, there may be a DC offset, which desktop speakers aren't built to handle. Other times, listening to the signal might disturb the circuit, altering its behavior and changing the sound significantly. We can solve both of these problems by building an audio output buffer, which isolates the signal and removes any unsafe DC offsets without _much_ distortion.
 
-<img src="/res/speaker-buffer-falstad.png" height=300 />
+<img src="res/speaker-buffer-falstad.png" height=300 />
 
 _[Speaker buffer schematic [Falstad]](https://tinyurl.com/22qtc32k)_
 
@@ -111,7 +111,7 @@ I recommend using the STX-3000 barrel jack connector from the [BOM](#bom). (With
 However, how did we get to this particular connector? It turns out that, even if you know that you want to use a 3.5mm audio connector, component selection is not straightforward! Check out the section on [component selection](#component-selection) for considerations on how we chose this particular part.
 
 #### Breadboard Layout
-<img src="/res/speaker-buffer-layout.png" height=300 />
+<img src="res/speaker-buffer-layout.png" height=300 />
 
 Notes:
 - Signal_In is an AC signal (eg. sine wave) and can be created using a function generator. 
@@ -125,7 +125,7 @@ Notes:
 Check the output using an oscilloscope to verify it is not too large (1Vpp) and has its DC offset removed. Do this _before_ connecting the speakers!
 
 This is what your breadboarded circuit might look like:
-<img src="/res/speaker-buffer-bb.png" height=300 />
+<img src="res/speaker-buffer-bb.png" height=300 />
 
 If it works, congratulations! You're ready to listen to signals!
 
@@ -141,7 +141,7 @@ The oscillator is the core of any synthesizer, generating periodic signals that 
 | **Feedback Mechanism:** | Amplification | Switching |
 | **Method:** | Excites oscillations in a resonator (eg. crystal) | Repetitively charges/discharges an energy-storage device to a threshold |
 | **Output:** | Sinusoidal | Non-linear (square / triangle / saw) |
-| **Example:** | ![](/res/signal-example-harmonic.png) | ![](res/signal-example-relaxation.png) |
+| **Example:** | ![](res/signal-example-harmonic.png) | ![](res/signal-example-relaxation.png) |
 
 While many synthesizers can output sinusoidal signals, sinusoids lack harmonics and therefore provide limited options for shaping the sound using subtractive filters. Therefore, we should look for a relaxation oscillator, which will produce a waveform that is rich in harmonics. 
 
@@ -155,14 +155,14 @@ A quick Google search will provide many relaxation oscillator designs. We will u
 ### Building To The Triangle Core
 The sawtooth core can be created via a design tweak to a simpler circuit which produces a triangle wave instead. This gives us an additional circuit, plus it is an easier circuit to examine before moving to a sawtooth core.
 
-<img src="/res/tri-core-falstad.png" height=300 />
+<img src="res/tri-core-falstad.png" height=300 />
 
 _[Triangle Core [Falstad]](https://tinyurl.com/22u8pzbx)_
 
 ### The Sawtooth Core
 The sawtooth core begins with the simple circuit below, which consists of a single capacitor, a diode, a comparator, and a few resistors. Depending on component values, it can reach frequencies as low as 10-20Hz, and as high as several kHz.
 
-<img src="/res/saw-core-falstad.png" height=300 />
+<img src="res/saw-core-falstad.png" height=300 />
 
 _[Sawtooth core [Falstad]](https://tinyurl.com/279leub2)_
 
