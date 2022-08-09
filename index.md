@@ -165,7 +165,7 @@ The name "operational amplifier" (aka "opamp") originates from a component that 
 
 $$V_{out} = A_{opamp}*(V_+ - V_-)$$
 
-In the ideal case, op-amps have an _amplification_ ($A_{opamp}$) that is infinite, but even practical op-amps have enormous internal gain ($A$ ≈ $10^5$). Therefore, the opamp functions like so: take the difference of the two input voltages, multiply it by a really big number, and output that voltage. 
+In the ideal case, op-amps have an _amplification_ ( $A_{opamp}$ ) that is infinite, but even practical op-amps have enormous internal gain ( $A$ ≈ $10^5$ ). Therefore, the opamp functions like so: take the difference of the two input voltages, multiply it by a really big number, and output that voltage. 
 
 You might imagine a few ways this could go:
 
@@ -193,7 +193,7 @@ Look at the figure below, and check out [this Falstad simulation](https://tinyur
 
 <img src="res/opamp-twoinputs.png" height=300 />
 
-_Different inputs cause the opamp output to hit either rail, depending on ($V_+ - V_-$) [[Falstad]](https://tinyurl.com/2jkduams)_
+_Different inputs cause the opamp output to hit either rail, depending on ( $V_+ - V_-$ ) [[Falstad]](https://tinyurl.com/2jkduams)_
 
 (Side-note: Falstad doesn't have a "comparator" part, and in fact, these simulations all use op-amps. However, because a comparator is a subset of operational amplifiers (where the "operation" is comparison), you can sometimes use an op-amp to represent a comparator. In fact, some designers even use op-amp ICs in place of comparators! (As we'll eventually discover, though, this can be bad practice, and if your op-amp is only being used to compare (by swinging to the rails), a comparator is a better choice.)
 
@@ -246,7 +246,7 @@ $$V_{trip,low} = V_{bias}\frac{R_{in}}{R_{in}+R_f} + V_{comp,low}\frac{R_f}{R_{i
 $$V_{trip,high} = V_{bias}\frac{R_{in}}{R_{in}+R_f} + V_{comp,high}\frac{R_f}{R_{in}+R_f}$$
 
 where
-- $V_{comp} = $ comparator output voltage (at low or high, respectively)
+- $V_{comp} =$ comparator output voltage (at low or high, respectively)
 - $R_{in} =$ input resistor (nearest the bias voltage)
 - $R_f =$ feedback resistor (connecting output to input)
 
@@ -272,7 +272,7 @@ _The triangle oscillator core [[Falstad]](https://tinyurl.com/2qcdnmht)_
 
 Importantly, the above circuit uses +12V and 0V, and **not** -12V, for powering the comparator. This is important because it shifts the point of symmetry for the hysteretic window from 0V to 6V.
 
- You should recognize the hysteretic comparator circuit from before. As noted in the previous section, the change in power to +12V/0V alters $V_{comp,low}, altering the trip points. However, with the bias point set at 6V, the voltage divider in the positive feedback path is once again symmetric, so trip points are evenly spaced about 6V. 
+ You should recognize the hysteretic comparator circuit from before. As noted in the previous section, the change in power to +12V/0V alters $V_{comp,low}$ and affects the trip points. However, with the bias point set at 6V, the voltage divider in the positive feedback path is once again symmetric, so trip points are evenly spaced about 6V. 
 
  It may take a bit more time to process how the new circuitry creates an oscillator, but you already know everything you need to understand it.
  
