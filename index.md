@@ -1,5 +1,19 @@
 <h1 align="center">AES Synthesizer System Design</h1>
 
+# Table of Contents
+- 0.0 The Goal
+- 1.0 Fundamentals
+- 2.0 The Synthesizer
+	- 2.0.1 Bill of Materials
+	- 2.0.2 System Overview
+	- 2.1 Basic Speaker Output Buffer
+	- 2.2 The Filter
+	- [2.3 The Oscillator](#2.3-the-oscillator)
+	- 2.4 The Amplifier
+	- 2.5 The Envelope Generator (ADSR)
+	- 2.6 Putting It All Together
+- 3.0 Other Stuff
+
 # 0.0 The Goal (And What To Expect)
 Building a synthesizer is difficult. I'm not saying this to scare you away, but to prepare you: this will be a challenge. That said, it will be an extremely rewarding challenge, and a great accomplishment. Synthesizers combine knowledge from across an electrical engineering education, and building one requires applying your knowledge in a way that will solidify your understanding of electronics and make you a far better engineer. Of course, any difficult journey deserves proper motivation.
 
@@ -40,11 +54,11 @@ The filter consists of a simple high- and low-pass stage, controllable via poten
 - Range of human hearing
 
 
-# The Synthesizer
+# 2.0 The Synthesizer
 
-## Bill of Materials (BOM)
+## 2.0.1 Bill of Materials (BOM)
 
-## System Overview
+## 2.0.2 System Overview
 
 On any synthesizer, we want the core functionality to create a pitch, change its volume, and shape the sound (or "timbre"). This leads every synthesizer to be made up of at least three basic subsystems:
 
@@ -132,15 +146,19 @@ Notes:
 Check the output using an oscilloscope to verify it is not too large (1Vpp) and has its DC offset removed. Do this _before_ connecting the speakers!
 
 This is what your breadboarded circuit might look like:
+
 <img src="res/speaker-buffer-bb.png" height=300 />
 
 You're ready to listen to signals!
 
 
-## The Filter
+## 2.2 The Filter
+
+**INCOMPLETE**
+
 Given that synthesizer signal flow originates with the oscillator, it might seem that this is the best place to start. For our system design, though, we'll want to start with something simpler which lays the groundwork for more complex subsystems. The filter of a synthesizer represents an excellent starting point. As we build the filter, we will become familiar with electronics fundamentals and engineering design principles which will apply to future subsystem development, and even future system design.
 
-## The Oscillator
+## 2.3 The Oscillator
 The oscillator is the core of any synthesizer, generating periodic signals that we recognize as sound. There are many circuits which produce oscillations, but in general, oscillators can be categorized as either harmonic or relaxation.
 
 | | Harmonic | Relaxation |
@@ -314,13 +332,13 @@ Most music synthesizers use either component values or voltages as inputs to det
 
 Spiked capacitor: https://tinyurl.com/24br28bv
 
-## The Amplifier
+## 2.4 The Amplifier
 
 
-## The Envelope Generator
+## 2.5 The Envelope Generator
 
 
-## Future Work
+## 3.0 Future Work
 ### Additional Oscillators & Noise
 
 ### Additional Modules
