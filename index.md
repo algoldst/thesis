@@ -1,16 +1,16 @@
 <h1 align="center">AES Synthesizer System Design</h1>
 
 # Table of Contents
-- 0.0 The Goal
-- 1.0 Fundamentals
-- 2.0 The Synthesizer
-	- 2.0.1 Bill of Materials
-	- 2.0.2 System Overview
-	- 2.1 Basic Speaker Output Buffer
-	- 2.2 The Filter
-	- [2.3 The Oscillator](#2.3-the-oscillator)
-	- 2.4 The Amplifier
-	- 2.5 The Envelope Generator (ADSR)
+- [0.0 The Goal](#00-the-goal-and-what-to-expect)
+- [1.0 Fundamentals](#10-fundamentals)
+- [2.0 The Synthesizer](#20-the-synthesizer)
+	- [2.0.1 Bill of Materials](#201-bill-of-materials-bom)
+	- [2.0.2 System Overview](#202-system-overview)
+	- [2.1 Basic Speaker Output Buffer](#21-a-basic-speaker-output-buffer)
+	- [2.2 The Filter](#22-the-filter)
+	- [2.3 The Oscillator](#23-the-oscillator)
+	- [2.4 The Amplifier](#24-the-amplifier)
+	- [2.5 The Envelope Generator (ADSR)](#25-the-envelope-generator)
 	- 2.6 Putting It All Together
 - 3.0 Other Stuff
 
