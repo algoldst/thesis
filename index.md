@@ -179,6 +179,8 @@ Comparators can be thought of as a subset of a more general device we'll examine
 
 <img src="res/ideal-opamp.jpg" height=200 />
 
+[//]: # (http://www.ee.surrey.ac.uk/Projects/CAL/frequency-response/idealopamp.html)
+
 The name "operational amplifier" (aka "opamp") originates from a component that can do mathematical _operations_ with amplification. Depending on its placement and configuration in the circuit, the operational amplifier can be made to perform a variety of computations, from basic arithmetic (eg. addition and subtraction) to advanced operations such as integration or differentiation. However, the output follows a simple formula which, in isolation, provides a principle of operation for us to understand:
 
 $$V_{out} = A_{opamp}*(V_+ - V_-)$$
@@ -294,13 +296,27 @@ Importantly, the above circuit uses +12V and 0V, and **not** -12V, for powering 
 
  It may take a bit more time to process how the new circuitry creates an oscillator, but you already know everything you need to understand it.
  
- Previously, we supplied a sine input at the inverting (-) terminal, which the comparator responded to. However, we could supply any input, as long as it eventually hits the trip points that the comparator needs to change its output. (Go back and run the simulation, changing the input source to a triangle or sawtooth.) 
+ Previously, we supplied a sine input at the inverting (-) terminal, which the comparator responded to. However, we could supply any "sweeping" input, as long as it eventually passes both trip points that the comparator needs to change its output. (Go back and run the simulation, changing the input source to a triangle or sawtooth, to see that this is the case.) 
  
- The comparator always outputs either "high" or "low" — in this case, +12V or 0V — so we can think of it as creating a rudimentary voltage supply. If we connect this output to an RC network, we'll get a capacitor that charges and discharges according to an RC time constant, τ, proportional to the values of R and C. This looks roughly the same as a voltage source input, and therefore provides the hysteretic comparator with the ability to oscillate!
+ The comparator always outputs either "high" or "low" — in this case, +12V or 0V — so we can think of it as creating a rudimentary voltage supply. If we connect this output to an RC network, we'll get a capacitor that charges and discharges according to an RC time constant, τ, proportional to the values of R and C. 
+
+ <img src="res/hysteretic-comparator-cap-output.png" height=300 />
+
+ _Connecting an RC network to the output of the comparator makes a "triangle" waveform, using the comparator as the supply. [[Falstad]](https://tinyurl.com/2qw5vgww)_
+  
+ This looks roughly the same as the input we've been using on the hysteretic comparator, so what if we used it the capacitor voltage to replace the voltage source? We would get a self-oscillating circuit!
  
- You'll find that $R_{charge}$ in the feedback path sets the oscillation frequency, by limiting current flow to the capacitor. However, the trip points _also_ affect oscillation frequency by controlling how far the capacitor must charge/discharge to trip the comparator. That said, they should not be used to vary the oscillation frequency. Larger hysteretic windows cause the RC response to become more "exponential" as the trip points move closer to the comparator rails. For a better "triangle" shape that looks linear, set the trip points closer together, so that they occupy a smaller fraction of the RC charging/discharging graph. For example, charging a capacitor from 5V to 7V has an imperceptible curve and will appear perfectly linear.
+<img src="res/tri-core-falstad.png" height=300 />
+
+_This is the same triangle oscillator core from before, but it should make a little more sense. [[Falstad]](https://tinyurl.com/2qcdnmht)_
+
+ You'll find that $R_{charge}$ in the feedback path sets the oscillation frequency, by limiting current flow to the capacitor. 
+ 
+ The trip points _also_ affect oscillation frequency by controlling how far the capacitor must charge/discharge to trip the comparator. That said, they should _not_ be used to vary the oscillation frequency. Larger hysteretic windows cause the RC response to become more "exponential" as the trip points move closer to the comparator rails. For a better "triangle" shape that looks linear, we want to set the trip points closer together, so that they occupy a smaller fraction of the RC charging/discharging graph. For example, charging a capacitor from 5V to 7V has an imperceptible curve and will appear perfectly linear.
 
  <img src="res/rc-charge-discharge.png" height=300 />
+
+_The entire RC curve is clearly not linear, but the segment from 5V to 7V is._
 
 You can (and should) try to build this oscillator before moving on. Although we are using it as a stepping stone to a sawtooth oscillator, you could implement it as an oscillator to use in your final synth!
 
@@ -312,17 +328,45 @@ In the next section, we'll turn the triangle core into a sawtooth oscillator.
 
 ### The Sawtooth Core
 
+A triangle wave is symmetric — it looks the same on the "charge" and "discharge" segments of one period. A sawtooth wave is asymmetric, but we can think about how we might alter a triangle wave to look like a saw: if that wave had an infinitely-fast charge time, and a normal triangle discharge time, the triangle would become a sawtooth!
 
+<img src="res/tri-to-saw.gif" height=100 />
 
-The sawtooth core begins with the simple circuit below, which consists of a single capacitor, a diode, a comparator, and a few resistors. Depending on component values, it can reach frequencies as low as 10-20Hz, and as high as several kHz.
+This is useful. If we can make the current flow _into_ the capacitor (during charging) _faster_ than the current flowing _out_ of the capacitor (during discharge), then we can create asymmetries in the charging and discharging times. The easiest way to do this is with a **diode**. 
+
+Diodes allow current to flow solely in the direction they point toward, and (mostly) prevent current from flowing backward. This gives us the ability to specify unique paths for current flow during the charge and discharge phases. In particular, if we place a single diode with no resistors in its feedback path, we'll create a short-circuit that immediately charges the capacitor when the comparator output is high, yet acts like an open-circuit when the output is low. This means that the capacitor will still discharge through the 15kΩ resistor, and current will take the short-circuit path through the diode only when charging.
+
+<img src="res/tri-to-saw-falstad.png" height=300 />
+
+_Connecting a diode across the feedback path allows current to flow onto the capacitor immediately during charging, creating a sawtooth waveform. (Check out the sim to change the "sawtooth-ness" by adding resistance to the diode path.) [[Falstad]](https://tinyurl.com/2qlh8ez6)_
+
+Because the discharge path is a resistor to 0V, we can modify the circuit slightly without changing its function much: let's connect the discharge resistor directly to GND instead of the comparator output. 
 
 <img src="res/saw-core-falstad.png" height=300 />
 
-_[Sawtooth core [Falstad]](https://tinyurl.com/279leub2)_
+_Our first sawtooth core. [[Falstad]](https://tinyurl.com/2e4andwe)_
 
-We want the ability to produce sound at a variable frequency; therefore, what we want is a variable oscillator which changes output frequency over the audible range of 20Hz - 20kHz. 
+This isn't _exactly_ the same circuit, because now the resistor is always connected to 0V (even during the charging phase). However, the magnitude of current through the diode is so large during charging, that the discharge current is negligible by comparison. 
 
-The term "variable" implies that something is changing, but what? There are several options when it comes to the "variable" part of a variable oscillator:
+(Open the sim, and you'll see that there are limits to this statement. For example, if the diode resistance gets "too large" relative to the discharge path, then the capacitor can't charge enough to hit the upper trip point.)
+
+Barring some component differences, this is approaching the sawtooth core that we'll use for our synthesizer. Depending on component values, we'll be able to make sharper "saw" edges, and reach different frequencies. At present, this core can reach frequencies around 700 Hz, but experiment with the component values in the simulation, and you'll see that this core can reach frequencies as low as 10-20Hz, and potentially as high as several kHz.
+
+(Note: Right-click the plot in Falstad, and you can change the horizontal scale to zoom in and see higher frequencies more clearly. If you're at the right scale, it will be able to automatically calculate the frequency and display it on the scope window.)
+
+### Build Notes from the Basic Saw Core
+
+_**Under Construction**_
+
+Here I'm going to put a breadboard schematic, picture of the breadboard. This is where we'll replace the "resistor" in the discharge path with a potentiometer.
+
+Notes about:
+- diode selection, and how the wrong diode can mess this up by adding capacitance and reverse current
+- capacitor sizing, and how the capacitance should be low to get a sharp rise time and low discharge current
+
+
+### Adding Voltage Control
+We want the ability to produce sound at a variable frequency. While the term "variable" implies that something is changing, it's not obvious what that ought to be. Right now, we can change the frequency of the sawtooth core by changing the resistance.  There are several options when it comes to the "variable" part of a variable oscillator:
 - Component values (eg. resistors, capacitors)
 - Voltage
 - Current
