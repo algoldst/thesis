@@ -193,7 +193,7 @@ Look at the figure below, and check out [this Falstad simulation](https://tinyur
 
 <img src="res/opamp-twoinputs.png" height=300 />
 
-_Different inputs cause the opamp output to hit either rail, depending on ( $V_+ - V_-$ ) [[Falstad]](https://tinyurl.com/2jkduams)_
+_Different inputs cause the opamp output to hit either rail, depending on $(V_+ - V_-)$ [[Falstad]](https://tinyurl.com/2jkduams)_
 
 (Side-note: Falstad doesn't have a "comparator" part, and in fact, these simulations all use op-amps. However, because a comparator is a subset of operational amplifiers (where the "operation" is comparison), you can sometimes use an op-amp to represent a comparator. In fact, some designers even use op-amp ICs in place of comparators! (As we'll eventually discover, though, this can be bad practice, and if your op-amp is only being used to compare (by swinging to the rails), a comparator is a better choice.)
 
