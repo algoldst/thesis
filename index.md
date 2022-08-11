@@ -472,7 +472,7 @@ Scaling from $I_B$ to $I_C$ is accomplished via β, which assuming β=100,
 
 $$I_C \approx 3000\mu\text{A} = 3\text{mA}$$
 
-This is proven in the simulation below. (The biggest discrepancies come from the fact that the voltage $V_{BE} is somewhere _between_ 0.6 - 0.7V — pick your favorite number in that range for calculations.)
+This is proven in the simulation below. (The biggest discrepancies come from the fact that the voltage $V_{BE}$ is somewhere _between_ 0.6 - 0.7V — pick your favorite number in that range for calculations.)
 
 <img src="res/base-resistor-calc.png" height=300 />
 
