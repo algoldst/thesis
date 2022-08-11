@@ -101,6 +101,21 @@ For simplicity, our design will use the following constraints across the entire 
 
 Power and signal levels typically have the most impact to the overall system, so with these constraints, we should be able to avoid any big design problems.
 
+## 2.0.3 Roadmap
+_**Under construction**_
+
+This is where I'll outline each major step that needs to be done to build each system. It acts as a checklist along the way, so people know what steps need to be done & where they are in the overall build process.
+
+**Oscillator:**
+- [ ] Triangle wave (resistive)
+- [ ] Sawtooth wave (resistive)
+- [ ] Add voltage control
+- [ ] Input conditioning to accept 0-5V CV
+- [ ] Basic thermal compensation
+
+Etc.
+
+
 ## 2.1 A Basic Speaker Output Buffer
 The final output stage of our synth will be ready for a speaker to play, but throughout the design process, we'll want to listen to the signal that we have. Sometimes, this signal isn't safe for a speaker to play — for example, there may be a DC offset, which desktop speakers aren't built to handle. Other times, listening to the signal might disturb the circuit, altering its behavior and changing the sound significantly. We can solve both of these problems by building an audio output buffer, which isolates the signal and removes any unsafe DC offsets without _much_ distortion.
 
