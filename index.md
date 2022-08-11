@@ -364,20 +364,83 @@ Notes about:
 - diode selection, and how the wrong diode can mess this up by adding capacitance and reverse current
 - capacitor sizing, and how the capacitance should be low to get a sharp rise time and low discharge current
 
+Spiked capacitor: https://tinyurl.com/24br28bv
+
 
 ### Adding Voltage Control
 _**Under construction**_
 
-We want the ability to produce sound at a variable frequency. While the term "variable" implies that something is changing, it's not obvious what that ought to be. Right now, we can change the frequency of the sawtooth core by changing the resistance.  There are several options when it comes to the "variable" part of a variable oscillator:
+We want the ability to produce sound at a variable frequency. While the term "variable" implies that something is changing, it's not obvious what that ought to be. Right now, we can change the frequency of the sawtooth core by modifying the resistance via a potentiometer, but luckily, this isn't our only option. Resistive control is somewhat limiting — after all, a potentiometer requires mechanical input, turning a knob or a screw with your fingers. Depending on the implementation, it would be extremely difficult, if not impossible, to rapidly change the pitch as you might with an instrument (eg. from 100Hz to 1kHz). Further, we might want to connect the oscillator to a keyboard or microcontroller, tuning it indirectly rather than with our hands. 
 
-- Component values (eg. resistors, capacitors)
-- Voltage
-- Current
+Both of these problems can be solved by making our oscillator voltage-controlled. However, doing this requires the introduction of a new device: the bipolar junction transistor, or BJT.
 
-Most music synthesizers use either component values or voltages as inputs to determine the output frequency of a signal. 
+#### The Bipolar Junction Transistor
 
+##### A Disclaimer
+Transistor theory has many complexities which threaten to make the topic overwhelming and incomprehensible to newcomers. Reasonable treatment of such topics spans multiple courses and entire textbooks. Luckily, we can sidestep much of the complexity by focusing on abstractions that are "true enough" to establish functional intuitions and understanding. For all the details, check out the courses and texts linked in the [References]() at the end of this project; however, in the interest of moving quickly, we will embrace some degree of approximation that will serve our purposes.
 
-Spiked capacitor: https://tinyurl.com/24br28bv
+##### BJT Anatomy & Behavior
+BJTs come in two "flavors", called _npn_ and _pnp_. For now, we'll consider the npn. Looking at the schematic symbol below, you'll see that BJTs have three terminals: a collector, base, and emitter. Current flows from top to bottom, collector to emitter — notice that the "arrow" is always on the emitter, and it points in the direction of current flow. 
+
+<img src="res/npn.png" height=150 />
+
+The base is not part of this flow path — that is, current does not flow from the collector into the base. Instead, think of the base as a "gatekeeper" controlling a valve to determine _how much current can flow_ from current to emitter. When the base is at a low voltage (relative to the emitter), it closes the valve and no current can flow; when the base has high voltage (again, relative to the emitter), the floodgates are opened and current can flow unimpeded! In this sense, a transistor is similar to a variable resistor (potentiometer), and we might think of the base as analagous to "setting" the resistance.
+
+<img src="res/npn-res-1ma.gif" height=200 />
+
+_A transistor and resistor, both conducting 10mA. Current flow depends on the base voltage (BJT), which sets current similar to a resistor value. [[Falstad]](https://tinyurl.com/2mfqly7z)_
+
+Importantly, BJTs determine current flow _similar_ to resistors, but they do **not** operate via Ohm's law. For example, the resistor above has a current of 10mA because $I = \frac{10V}{1k\Omega} =$ 10mA. Setting the supply voltage to 20V would double the current to 20mA, while cutting it in half would similarly change the current to 5mA. **The BJT would not respond in the same way.**
+
+While Ohm's law places current as proportional to voltage across a resistor, a BJT doesn't respond to voltage applied across collector to emitter, or $V_{CE}$. Instead, the formula governing current flow from collector to emitter relies on the relative voltage between base and emitter, $V_{BE}$. At 0V, the emitter-collector channel is completely closed, and most engineers consider the transistor to be fully conducting when $V_{BE}=0.7\text{ V}$. (This is certainly the maximum voltage you'll want to apply across the base-emitter terminals!) 
+
+More specifically, when there is voltage to support it, current _approximately_[^pcheung] follows:
+
+$$I_C = I_E = I_s e^{\frac{V_{BE}}{V_T}}$$
+
+where
+
+- $I_s$ = saturation current ~ $10^{-15} \text{mA}$
+- $V_T$ = thermal voltage = 25mV at 20°C
+
+We won't be using this formula explicitly, but [one key takeaway](18mv-rule.md) is that increases to $V_{BE}$ of +18mV result in doubling of the current through $I_C$.
+
+<img src="res/18mv-rule.png" height=300 />
+
+_Increasing the base-emitter voltage by +18mV causes the collector current to double._ 
+
+##### Configurations
+In general, we will always setup BJT circuits in one of two configurations, like in the figure below:
+
+- "Forward-active" mode:
+
+$$V_{emitter} < V_{base} < V_{collector}$$
+
+- "Cutoff" mode:
+
+$$V_{base} \leq V_{collector}, V_{base} \leq V_{emitter}$$
+
+This means we'll avoid any configuration which sets the collector voltage _below_ either the base or emitter — this mode, called "saturation", has different rules and won't be very useful to us.
+
+<img src="res/cutoff-fa.png" height=250 />
+
+_We'll always aim to use transistors in "cutoff" or "forward active" modes. Notice that the collector is the highest voltage; the base is at or above the emitter; and the emitter is at the lowest voltage._
+
+##### Base Current & Beta
+If you hovered over a BJT in any of the simulations, you might notice that there is an (almost imperceptible) current going into the base of the transistors! This current is so small (often nano- or micro-amperes) that we frequently disregard it — for example, we've been talking about the emitter and collector currents being equal $(I_C = I_E)$, when in reality, $I_E = I_C + I_B \approx I_C$. 
+
+Despite its small size, this current is actually very useful for BJT circuit design, because in the forward-active mode, base- and collector currents are related by a device parameter called "beta" (β, or in datasheets, hFE). While BJTs _are_ voltage-controlled (by $V_{BE}$), beta gives us a way to consider how the current is controlled by thinking about _current_ instead of voltage:
+
+$$I_C = \beta * I_B$$
+
+Typical β values are around 100, but vary by device and even between individual transistors! However, thinking about β=100 will work well for us, on average. You can see the relationship of β acting on the BJT in the figure below, and also in the simulation below as you change the base voltage.
+
+<img src="res/beta-rel.png" height=300 />
+
+_β relates the current at the base to the current through the emitter and collector. Typical values for β=100. [[Falstad]](https://tinyurl.com/2frerxl6)_
+
+#### A Voltage Controlled Saw Core
+
 
 ## 2.4 The Amplifier
 
@@ -395,3 +458,4 @@ Spiked capacitor: https://tinyurl.com/24br28bv
 [^mit_syw]: So You Want to Build a Synthesizer MIT http://web.mit.edu/klund/www/weblatex/node2.html
 [^pc_eurorack]:Perfect Circuit Eurorack https://www.perfectcircuit.com/signal/eurorack-line-level
 [^nate]: Nate Hatch Fender Component Selection https://www.youtube.com/watch?v=FacBtCPez2U&t=7s
+[^pcheung]: Pcheung's Aero notes
