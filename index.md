@@ -400,7 +400,7 @@ $$I_C = I_E = I_s e^{\frac{V_{BE}}{V_T}}$$
 
 where
 
-- $I_s$ = saturation current ~ $10^{-15} \text{mA}$
+- $I_s$ = saturation current ~ $50\text{fA}$ on Falstad SPICE (femto = $10^{-15}$ )
 - $V_T$ = thermal voltage = 25mV at 20°C
 
 We won't be using this formula explicitly, but [one key takeaway](18mv-rule.md) is that increases to $V_{BE}$ of +18mV result in doubling of the current through $I_C$.
@@ -440,7 +440,82 @@ Typical β values are around 100, but vary by device and even between individual
 _β relates the current at the base to the current through the emitter and collector. Typical values for β=100. [[Falstad]](https://tinyurl.com/2frerxl6)_
 
 #### A Voltage Controlled Saw Core
+Knowing how a BJT controls current allows us to replace the resistor in the capacitor discharge path with an npn BJT. All we need to do is find the base-emitter voltages which yield the same currents that the resistors provided for oscillation. This will depend on the capacitor size and comparator threshold values you use — for [this setup using a 100nF capacitor [Falstad]](https://tinyurl.com/2kaspyo2), the resistor sees currents between 10uA and 400uA for frequencies between 28Hz and 1.2kHz (Using R = [15kΩ, 700kΩ]).
 
+Using the BJT formula from earlier, we can calculate that $I_c = 50\text{fA} *e^{\frac{0.475}{25\text{mV}}}$ ≈ 10uA, so a 475mV $V_{BE}$ is around where we'll find a 20Hz oscillation. It's only worthwhile to use this formula as a starting point: component variations mean that calculating an exact value will be useless for a physical implementation of the circuit, but it's important to have an estimate so we don't fry the circuit accidentally.
+
+<img src="res/vbe-freq-saw.gif" height=300 />
+
+_Replacing the discharge resistor with an npn BJT provides voltage control. Changing base voltage changes frequency. [[Falstad]](https://tinyurl.com/2la3ngu7)_
+
+Don't try building this just yet — it's too easy to fry the BJT accidentally. We'll fix that in a moment, but first, let's focus on a few observations to see what else we can learn from this circuit.
+
+1. Recall that the resistive sawtooth core had displayed exponential curvature on the decay phase. By comparison, even with a wide hysteretic window and a slow oscillation frequency, the BJT oscillator has a perfectly linear sawtooth decay. This is because the BJT sets a _constant_ current draw (determined by $V_{BE}$), whereas the resistor forms an RC network and has a characteristic discharge curve. (Why? Because as the voltage on the capacitor drops, this reduces the "pressure" pushing current through the resistor.) ![](res/bjt-vs-res.png) 
+2. We know from the BJT equation that an 18mV increase to $V_{BE}$ doubles the collector current. This, in turn, halves the time that the capacitor takes to reach the lower trip point, and therefore doubles the frequency. This gives us a relationship between voltage and frequency: every 18mV should give a 1-octave jump in pitch! (Recall pitch perception [is exponential](#sound-&-audio-fundamentals)).Try it out in the simulator.
+
+##### Current-Limiting Through Beta
+We're almost ready to implement voltage-control on the breadboard — the final step is to limit the current and avoid a short-circuit. If we accidentally connect 1V to the input at the base, the BJT has no current-limiting capability, opens completely, and creates a dangerous short-circuit! (The figure below shows 6kA flowing through the circuit, but in reality, the component will burn out or catch fire.) If we instead place a 10kΩ resistor before the base, we'll avoid this disaster.
+
+<img src="res/base-resistor.gif" height=250 />
+
+This presents a problem, though: If we place a resistor at the base, then how will we reliably set the base voltage? (For example, in the figure above, how do we know the current produced by 1V input to the circuit on the left?)
+
+In general, if we know a BJT is conducting (in the forward-active mode of operation — recall: the base is positive and the collector has the highest voltage), then we can assume a 0.6 - 0.7V drop across $V_{BE}$. This makes the voltage across the resistor
+
+$$V_R = (1V - 0.7V) = 0.3V$$
+
+and the base current is therefore 
+
+$$I_B = \frac{V_{R_B}}{R_B} = \frac{0.3\text{V}}{10\text{k}\Omega} = 30\text{uA}$$
+
+Scaling from $I_B$ to $I_C$ is accomplished via β, which assuming β=100,
+
+$$I_C \approx 3000\mu\text{A} = 3\text{mA}$$
+
+This is proven in the simulation below. (The biggest discrepancies come from the fact that the voltage $V_{BE} is somewhere _between_ 0.6 - 0.7V — pick your favorite number in that range for calculations.)
+
+<img src="res/base-resistor-calc.png" height=300 />
+
+_Protecting the BJT from a short-circuit with an input resistor. [[Falstad]](https://tinyurl.com/2qne7f5k)_
+
+The good thing about this resistor is that it protects from short-circuits, but also has little effect on the BJT when we apply the intended voltage inputs. For example, if we apply 500mV, then the $V_{BE}$ will be around 500mV because the resistor has barely any current to drop voltage across itself.
+
+$$V_{BE} = 0.5 \implies I_C = 20\mu A$$
+
+$$I_B = \frac{I_C}{\beta} = \frac{20\mu}{100} = 200\text{nA}$$
+
+$$V_{R_B} = I_{R_B} R_B = (200n)(10k) = 2\text{mV}$$
+
+So at our typical input voltage of ~500mV, the resistor will only drop ~2mV before hitting the base of the BJT.
+
+### Build Notes From The VCO
+_**Under construction**_
+
+Includes breadboard schematic, picture of breadboard circuit, directions to _slowly_(!) increase voltage. Also notes about logging the input voltages that correspond to some target frequencies; this will be useful in later steps for temperature compensation.
+
+Notes about too-low input voltages causing the cap to charge and stay there.
+
+Again, using scope probes will change the oscillation frequency, and even allow the cap to discharge without any discharge path! (Through 1M scope probes.) Can use op-amp buffer to observe.
+
+
+### VCO Input Conditioning: Accepting 0-5V
+_**Under construction**_
+
+While the VCO works with a variable power supply, it's not ready to integrate with the rest of a system until it can accept a standard range of voltages — we specified 0-5V for control voltage (CV) signals. Right now, the oscillator works within a narrow range ~ [450mV, 550mV]. If we put 5V into the oscillator, it will drain the capacitor faster than it can charge to the high trip point; if we put 0V into the oscillator, the capacitor will charge to the high trip point and never discharge at all. We need to convert 0-5V into 450-550mV.
+
+This is a linear conversion: we simply need to shrink the range to span 100mV, and shift it up into the voltage range we want. One easy way to do this is using a passive mixer, which means using resistors to balance signals into some weighted average. In fact, we have already seen the passive mixer — except we know it as a voltage divider.
+
+<img src="res/voltage-div-shifting.png" height=250 />
+
+_A voltage divider is a 2-input passive mixer._
+
+Looking at the above examples, we see that with equal resistances, the output voltage of a two-ended voltage divider is simply the average of the two inputs. In general, the formula we found (which is therefore the formula for a 2-channel passive mixer) is:
+
+$$V_{out} = V_1\frac{R_1}{R_1+R_2} + V_2\frac{R_2}{R_1 + R_2}$$
+
+We're looking to scale one of our inputs (the 0-5V CV input) and offset it with a constant voltage shift, to make 450mV - 550mV. In other words, we want:
+
+ If we change the resistor ratios, we have a formula that provides the weighted average of two inputs, $V_1$ and $V_2$. 
 
 ## 2.4 The Amplifier
 
