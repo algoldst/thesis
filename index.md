@@ -781,7 +781,9 @@ Given an operating point on the transfer curve — meaning we set the DC offset 
 >
 > 1 year = (1 year) * (365 days/year) * (12 hours / day) * (60 minutes / hour) = 262800 minutes
 
-Let's see how to use $g_m$. Assuming again that:
+###### An Example Using gm
+
+Assuming again that:
 
 - $V_{BE}$ = 0.6V (operating point)
 - $I_C$ = 1mA (operating point)
