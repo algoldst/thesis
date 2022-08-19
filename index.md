@@ -548,7 +548,7 @@ Imagine we have a BJT where $V_b = 0.6V$ gives 1mA of current through the device
 
 <img src="res/bjt-600mv-doublings.png" height=250 />
 
-_Current changes exponentially as $V_{be}$ changes ±18mV. [[Falstad]](https://tinyurl.com/2od8coef)_
+_Current changes exponentially as $V_{be}$ changes ±18mV._ _[[Falstad]](https://tinyurl.com/2od8coef)_
 
 One important characteristic of BJTs is that the current they set is largely independent of any circuitry "upstream". For example, a 1kΩ resistor connected across 10V conducts 10mA of current — but a BJT will limit the current flow according to its own $V_{be}$, even if the resistor _could_ conduct more.
 
@@ -560,7 +560,7 @@ Of course, there are limits to the current draw, and we should consider the curr
 
 <img src="res/bjt-hit-upper-limit.png" height=250 />
 
-_The BJT sets the current flow by $V_{be}$, but eventually hits an upper current limit because of the resistor. [[Falstad]](https://tinyurl.com/2lxvxb4b)_
+_The BJT sets the current flow by $V_{be}$, but eventually hits an upper current limit because of the resistor._ _[[Falstad]](https://tinyurl.com/2lxvxb4b)_
 
 The exciting result of these experiments is that we have the ability to control the _current_ going through the resistor, without changing the _size_ of this resistor! By Ohm's Law, this implies that if we can change the current through the resistor (and we can, via $V_{be}$), we can therefore change its corresponding voltage drop. We can verify this by re-examining the BJT comparison simulation, this time probing the voltage at the BJT collector. Take a moment to verify the logic: larger voltage drops (due to larger current) cause _lower_ output voltages: 
 
@@ -692,7 +692,7 @@ We can get into similar trouble by leaving the value of $R_C$ alone and raising 
 
 - Output voltage drops for increasing resistor values or $V_{be}$.
 - With fixed $V_{be}$, current remains constant for appropriate resistor sizes.
-- Resistors must be sized appropriately with respect to the BJT's requested current, or else saturation occurs ($V_C < V_B$).
+- Resistors must be sized appropriately with respect to the BJT's requested current, or else saturation occurs $(V_C < V_B)$.
 
 | $V_{be}$ | $I_C$ | $R_C$ | $V_{R_C}$ | $V_{out}$ |
 |----------|-------|-------|-----------|-----------|
@@ -704,7 +704,7 @@ We can get into similar trouble by leaving the value of $R_C$ alone and raising 
 
 _** = Causes saturation. (Last three rows.)_
 
-In simulation, we can increase the gain to $A$ ≈ 300 before hitting saturation. This occurs around $R_C$ ≈ 7.5kΩ ($V_{be}$ = 0.6V), or $V_{be}$ = 0.652V ($R_C$ = 1kΩ).
+In simulation, we can increase the gain to $A$ ≈ 300 before hitting saturation. This occurs around $R_C$ ≈ 7.5kΩ ( $V_{be}$ = 0.6V), or $V_{be}$ = 0.652V ( $R_C$ = 1kΩ).
 
 Both approaches illustrate an important lesson: we must control $R_C$ and/or $V_{be}$ appropriately. Too large, and the output voltage swings too low, causing saturation. Too small, and any changes in current caused by "wiggles" at the base won't translate to noticeable $\Delta V_{out}$. 
 
@@ -731,7 +731,7 @@ noting that for $V_T$ = 25mV, the function $y=e^{\frac{x}{0.025}}$ doubles in va
 
 <img src="res/18mv-doublings-graph.png" height=300 />
 
-_Current doubles because $e^\frac{V_{be}}{0.025}$ doubles every time $V_{be}$ increases by 0.018._
+_Current doubles because $e^{\frac{V_{be}}{0.025}}$ doubles every time $V_{be}$ increases by 0.018._
 
 Here's the graph again, but rescaled so that 0.6V maps to 1mA. (Using $I_s$ = 37fA. Again, this is not accurate to physical reality, but it is easier to work with for intuition.)
 
