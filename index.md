@@ -1,5 +1,8 @@
 <h1 align="center">AES Synthesizer System Design</h1>
 
+# WARN: This is incomplete.
+To view the last published version, check [here](https://github.com/algoldst/thesis/blob/6e583e6590bdb3e395fe11f8818c5142a461ad56/index.md).
+
 # Table of Contents
 - [0.0 The Goal](#00-the-goal-and-what-to-expect)
 - [1.0 Fundamentals](#10-fundamentals)
@@ -493,7 +496,7 @@ This is proven in the simulation below. (The biggest discrepancies come from the
 
 _Protecting the BJT from a short-circuit with an input resistor. [[Falstad]](https://tinyurl.com/2qne7f5k)_
 
-The good thing about this resistor is that it protects from short-circuits, but also has little effect on the BJT when we apply the intended voltage inputs. For example, if we apply 500mV, then the $V_{BE}$ will be around 500mV because the resistor has barely any current to drop voltage across itself.
+The good thing about this resistor is that it protects from short-circuits, but also has little effect on the BJT when we apply the intended voltage inputs. The BJT will try to maintain the typical 0.6V "forward active" drop. For example, if we apply only 500mV, then in a forward-active configuration, most of the 500mV must drop across $V_{BE}$. This leaves the resistor with barely any current to drop voltage across itself.
 
 $$V_{BE} = 0.5 \implies I_C = 20\mu A$$
 
@@ -533,6 +536,346 @@ We're looking to scale one of our inputs (the 0-5V CV input) and offset it with 
  If we change the resistor ratios, we have a formula that provides the weighted average of two inputs, $V_1$ and $V_2$. 
 
 ## 2.4 The Amplifier
+A synthesizer's amplifier directly controls the volume of the signal output. We could do this in many ways, and the most basic might be a simple voltage divider. However, we want the ability to control the volume in both directions: quieter, but also louder. This isn't possible using solely passive components like resistors and capacitors, because we need to add additional power to the circuit. Recall that our goal is to use CV to control the amplifier, meaning that the final subsystem design will turn 0-5V into a continuous range of volume levels.
+
+We've used operational amplifiers to buffer (create a copy of) signals, and they can also be used for amplification. Constant amplification is easy with op-amps, and we'll see how to do this toward the end of the amplifier build. First, though, we need to implement adjustable gain, which is a job for transistors. 
+
+
+### The Most Basic CE Amplifier
+Imagine we have a BJT where $V_b = 0.6V$ gives 1mA of current through the device. (Note: This is achieved by setting $I_s$ = 84.28fA in the model. We're doing this for easy numbers and demonstration purposes, so do not use these numbers as truth! For the same reason, we'll be using 10V supply rails for now — we'll switch back to 12V when we build.)
+
+ We know already that a BJT uses voltage to set current, and from the Ebers-Moll equation that ±18mV changes to $V_{be}$ correspond to factors-of-2 changes to current.
+
+<img src="res/bjt-600mv-doublings.png" height=250 />
+
+_Current changes exponentially as $V_{be}$ changes ±18mV. [[Falstad]](https://tinyurl.com/2od8coef)_
+
+One important characteristic of BJTs is that the current they set is largely independent of any circuitry "upstream". For example, a 1kΩ resistor connected across 10V conducts 10mA of current — but a BJT will limit the current flow according to its own $V_{be}$, even if the resistor _could_ conduct more.
+
+<img src="res/res-vs-bjt.png" height=250 />
+
+_A 1kΩ resistor pulls 10mA of current from 10V, but if the BJT only opens the valve enough to allow 1mA, then that's all that will flow. [[Falstad]](https://tinyurl.com/2hltkyz4)_
+
+Of course, there are limits to the current draw, and we should consider the current-setting capability of the BJT as a "request" that is obeyed when possible. The BJT can't pull more current than is available, but when the request is reasonable, it sets the flow rate.
+
+<img src="res/bjt-hit-upper-limit.png" height=250 />
+
+_The BJT sets the current flow by $V_{be}$, but eventually hits an upper current limit because of the resistor. [[Falstad]](https://tinyurl.com/2lxvxb4b)_
+
+The exciting result of these experiments is that we have the ability to control the _current_ going through the resistor, without changing the _size_ of this resistor! By Ohm's Law, this implies that if we can change the current through the resistor (and we can, via $V_{be}$), we can therefore change its corresponding voltage drop. We can verify this by re-examining the BJT comparison simulation, this time probing the voltage at the BJT collector. Take a moment to verify the logic: larger voltage drops (due to larger current) cause _lower_ output voltages: 
+
+$$V_{out} = 10 \text{V} - V_R$$
+
+<img src="res/common-emitter-inout.png" height=300 />
+
+_Larger voltages at the BJT base translate to lower voltage output, by dropping more voltage across the resistor. [[Falstad]](https://tinyurl.com/2zkgly2w)_
+
+However, this isn't just 1:1 conversion. We've been changing the base voltage by _millivolts_ and seeing the output sweep across the entire 10V supply range! Because the current is exponential from linear $V_{be}$, and voltage drop across the resistor depends on this current, we have:
+
+$$I \sim exp(V_{be})$$
+
+$$V_R = IR$$
+
+$$V_{out} = \text{VCC} - V_R = \text{VCC} - IR$$
+
+$$⇒ V_{out} \sim exp(V_{be})$$
+
+This is **amplification**! Try it for yourself to see how any change that is applied to the base voltage is mirrored at the output. Importantly, because of the voltage _drop_, the output is an inverted version of the input.
+
+<img src="res/wiggling.gif" height=300 />
+
+_Wiggling the voltage at the base (input) causes an amplified & inverted copy at the output. [[Falstad]](https://tinyurl.com/2kunjnyq)_
+
+The example above uses a slider to simulate a changing input, but we don't need to use a slider. Any periodic signal applied to the base will produce a similar output, as long as it has the right DC offset (~ 0.6V) and doesn't stray too far outside this range. (So around ±20mV peak-to-peak.) 
+
+<img src="res/common-emitter-signal.png" height=300 />
+
+_A basic common-emitter amplifier. [[Falstad]](https://tinyurl.com/2hajenn4)_
+
+In this example, the input range spans [590mV, 610mV], or 20mV peak-to-peak (Vpp). The output range covers [8.53V, 9.32V], or  0.79Vpp. We can define the gain of a common-emitter amplifier as a ratio of input to output:
+
+$$A_{CE} = - \frac{V_{pp,out}}{V_{pp,in}}$$
+
+The minus sign is there because the signal is inverted with respect to the input.
+
+ For this amplifier, the gain is $A = -\frac{0.79}{0.020} = -39.5$, meaning that any input signal will be inverted and scaled up by 39.5x. Try changing the amplitude of the input, and you'll see that — regardless of input magnitude — the output's peak-to-peak value will always be ~ 40x larger than the input!
+
+#### Common Emitter Gain
+
+We have seen the most basic common-emitter amplifier configuration and proven that it amplifies. We'll benefit from learning how this gain is set, first via some experimentation and careful observations. At the end, we'll develop our observations to more precise understanding, which will give us the key to variable-gain amplification.
+
+There are two ways to control gain with the current configuration:
+
+1. Change the size of the collector resistor $R_C$.
+2. Change the DC offset of the input higher/lower than 0.6V.
+
+##### Changing Gain Via Collector Resistance
+Changing the collector resistor directly affects the gain in a linear manner: if $I_C$ is fixed due to $V_{be}$, then the voltage drop $V_{R_C}$ will be scaled by Ohm's Law.
+
+Compare when the resistor $R_C$ = 1kΩ, the "wiggle" at the output caused by ±5mV is ~ 0.2V.
+
+| $V_{be}$ | $I_C$ | $R_C$ | $V_{R_C}$ | $\Delta V_{out}$ |
+|----------|-------|-------|-----------|-----------|
+| -5 mV | 0.824 mA | 1k | 0.82 V | -0.18 V |
+| 0.6 V | 1 mA | 1k | 1 V | | 
+| +5 mV | 1.214 mA| 1k | 1.21 V | +0.21 V |
+
+Calculating peak-to-peak of the output is possible by subtracting (max - min), so gain is $|A| = \frac{\text{Output Vpp}}{\text{Input Vpp}} = \frac{0.21 + 0.18 V}{0.010} = 39$ as before.
+
+However, when we change $R_C$ = 4kΩ, the "wiggle" for the same input becomes ±0.7 - 0.9 V:
+
+| $V_{be}$ | $I_C$ | $R_C$ | $V_{R_C}$ | $\Delta V_{out}$ |
+|----------|-------|-------|-----------|-----------|
+| -5 mV | 0.824 mA | 4k | 3.3 V | -0.7 V |
+| 0.6 V | 1 mA | 4k | 4 V | | 
+| +5 mV | 1.214 mA| 4k | 4.9 V | +0.9 V |
+
+Gain is $|A| = \frac{0.9 + 0.7}{0.010} = \frac{1.6}{0.010} = 160$, increasing linearly with $R_C$. (Notice that we made $R_C$ 4x as large, and 160 = 4*40, our original gain.)
+
+In general, $\Delta V_{out} = \Delta I * R_C$, so larger values of $R_C$ will scale the same changes in current to larger variations in $V_{out}$.
+
+
+##### Changing Gain Via DC Base Offset
+
+Returning $R_C$ to its original value of 1kΩ, let's pursue the other option and "wiggle" about different voltages than 0.6V.
+
+Again, with $V_{BE}$ = 0.6V, we get:
+
+| $V_{be}$ | $I_C$ | $R_C$ | $V_{R_C}$ | $\Delta V_{out}$ |
+|----------|-------|-------|-----------|-----------|
+| -5 mV | 0.824 mA | 1k | 0.8 V | -0.176 V |
+| 0.6 V | 1 mA | 1k | 1 V | | 
+| +5 mV | 1.214 mA| 1k | 1.2 V | +0.214 V |
+
+Again, $|A|$ = 39.
+
+Recall that -18mV cuts BJT current by half, and we have:
+
+| $V_{be}$ | $I_C$ | $R_C$ | $V_{R_C}$ | $V_{out}$ |
+|----------|-------|-------|-----------|-----------|
+| -5mV | 411 uA | 1k | 0.411 V | -0.089 V |
+| 0.582V | 500 uA | 1k | 0.5 V | | 
+| +5mV | 605 uA | 1k | 0.605 V | +0.105 V |
+
+$|A| = \frac{0.194}{0.010} = 19.4$, about $\frac{1}{2}$ our original gain.
+
+If we increase by +18mV offset, we find:
+
+| $V_{be}$ | $I_C$ | $R_C$ | $V_{R_C}$ | $V_{out}$ |
+|----------|-------|-------|-----------|-----------|
+| -5mV | 1.65 mA | 1k | 1.65 V | -0.350 V |
+| 0.618V | 2 mA | 1k | 2 V | | 
+| +5mV | 2.43 mA | 1k | 2.43 V | +0.430 V |
+
+$|A| = \frac{0.78}{0.010} = 78$, or 2x the original gain.
+
+This achieves similar results as before, but we only need to shift the input offset by a few millivolts to achieve large gain changes. However, the shift this time is _exponential_. This means a gain of 4x, similar to setting $R_C = 4R$, is achieved by simply adding another 18mV, to reach 0.636V offset. In the simulation below, $|A| = \frac{6.683-5.118}{0.010} = 156$.
+
+<img src="res/ce-636-is-4x.png" height=300 />
+
+_Increasing the offset by +36mV (look at the scope average = 636mV) causes similar gain as the 4x resistor. [[Falstad]](https://tinyurl.com/2z8ejrox)_
+
+It should be cautioned that these designs (so far) are not ideal to actually implement in a physical design. Without any current limiting, the risks of short-circuiting a transistor are very high. (Not that you can't do it — it may burn or blow up, though. Wear safety glasses, be ready to kill the power, and don't leave these circuits unattended!)
+
+Our previous approach of installing current-limiting resistors would address some issues, but the interaction changes the behavior by introducing a phenomenon called "degeneration". Despite its advantages (eg. increased linear input range and temperature stability), degeneration adds complexity and isn't essential for building an amplifier. However, it could be considered for [future designs]() once you have a working synth. 
+
+##### Limits to Gain
+There is an upper limit on $R_C$, which we saw when  looking at BJTs earlier: if $R_C$ grows too large, the BJT's ability to set current will be overriden by the larger resistance. In this case, $R_C$ should be below 10kΩ. As it approaches this value, any "request" for 1mA of current will be denied — even if we max out $V_{be}$ to open the BJT "valve" completely, the maximum current flow will be dependent on $R_C$. (Ohm's Law: $I = \frac{V_R}{R} = \frac{10V}{10k\Omega} = \text{1mA}$.)
+
+Another way to view this "upper limit" to $R_C$ is by considering the voltage drop that results across $R_C$ due to the BJT current. When $R_C$ is too large, then if the BJT pulled the same current, the resistor's voltage drop would be greater than that supplied by the power rails! For the same 1mA current draw, Ohm's Law gives $V_R = IR = 1\text{mA} * 10k\Omega = 10V$, and larger resistor values would drop voltage further if current flow were sustained! 
+
+In reality, as $R_C$ approaches 10kΩ, the current draw does not stay at 1mA, but must decrease accordingly. Regardless, dropping large voltages across $R_C$ leaves the BJT collector terminal at a very low voltage relative to other terminals. Recall that "forward active" mode is ensured by keeping the collector voltage higher than base or emitter — we can see that when $R_C$ gets too large, the BJT leaves the forward-active mode to enter "saturation". (We do not want this! In addition to being a bad amplifier, saturation causes our BJT intuitions to fail!) 
+
+We can get into similar trouble by leaving the value of $R_C$ alone and raising the DC offset of $V_{be}$ too much. Because this increases current draw, the resistor drops more and more voltage until saturation is reached. 
+
+ The table below summarizes:
+
+- Output voltage drops for increasing resistor values or $V_{be}$.
+- With fixed $V_{be}$, current remains constant for appropriate resistor sizes.
+- Resistors must be sized appropriately with respect to the BJT's requested current, or else saturation occurs ($V_C < V_B$).
+
+| $V_{be}$ | $I_C$ | $R_C$ | $V_{R_C}$ | $V_{out}$ |
+|----------|-------|-------|-----------|-----------|
+| 0.6 V| 1 mA | 1k | 1 V | 9 V |
+| 0.6 V | 1 mA | 4k | 4 V | 6 V | 
+| 0.6 V | 1 mA| 8k ** | 8 V | 2 V |
+| 0.6 V | 0.62 mA | 16k ** | 9.9 V | 0.044 V |
+| 0.7 V ** | 9.97 mA | 1k | 9.97 V | 0.024 V |
+
+_** = Causes saturation. (Last three rows.)_
+
+In simulation, we can increase the gain to $A$ ≈ 300 before hitting saturation. This occurs around $R_C$ ≈ 7.5kΩ ($V_{be}$ = 0.6V), or $V_{be}$ = 0.652V ($R_C$ = 1kΩ).
+
+Both approaches illustrate an important lesson: we must control $R_C$ and/or $V_{be}$ appropriately. Too large, and the output voltage swings too low, causing saturation. Too small, and any changes in current caused by "wiggles" at the base won't translate to noticeable $\Delta V_{out}$. 
+
+Complicating matters, the output will oscillate with gain, meaning that **all points** on the output voltage must be considered. If any of the output is below the base voltage, saturation will occur. For example, in the figure below, the constant DC input (0.657 V) to the circuit on the left causes an output voltage of 0.937V — which feels dangerously close to the base voltage, but is fine in theory. However, with an input of ±5mV and gain $|A|$ ≈ 300, the output will attempt to reach 
+
+$$V_{out,min} = 0.937V - (300)(5mV) = 0.937 - 1.5 = -0.563V$$
+
+which is below GND! Open the simulation and hover over the second BJT to see that it switches from "forward active" to "saturation" briefly each cycle. This causes distortion because hitting saturation causes the output to "run out" of voltage to go more negative.
+
+<img src="res/sneaky-saturation.gif" height=300 />
+
+_This circuit doesn't _seem_ like it should saturate with only DC input, but with an oscillating input and -300x ideal gain, it saturates and distorts. [[Falstad]](https://tinyurl.com/2l8yz2gc)_
+
+Note this *might* be something you want [in future designs]() — audio is a field where distortion can be a good thing! For now, though, we're looking to amplify without altering the sound much, so we will try to avoid saturation.
+
+##### Quantifying Gain With Transconductance
+> Our first "Theory" warning! This section is optional, but highly encouraged. So far we've been adjusting the gain of the CE amplifier, measuring the output waveform, and comparing $V_{pp}$ to find gain. However, we can develop our theoretical knowledge to solve for gain, uncovering some relationships and equations that will be useful later in our study of differential pairs.
+
+We found previously that increasing the npn BJT's DC offset gave us more gain — approximately twice as much gain for every 18mV increase. This comes from the formula:
+
+$$I_c = I_s e^{\frac{V_{be}}{V_T}}$$
+
+noting that for $V_T$ = 25mV, the function $y=e^{\frac{x}{0.025}}$ doubles in value when $x$ increases by 0.018. This scales current proportionally.
+
+<img src="res/18mv-doublings-graph.png" height=300 />
+
+_Current doubles because $e^\frac{V_{be}}{0.025}$ doubles every time $V_{be}$ increases by 0.018._
+
+Here's the graph again, but rescaled so that 0.6V maps to 1mA. (Using $I_s$ = 37fA. Again, this is not accurate to physical reality, but it is easier to work with for intuition.)
+
+<img src="res/ic-vs-vbe-rescaled.png" height=320 />
+
+_Assuming a convenient value of Is gives a plot where the exponential relationship is clearly shown._
+
+Unfortunately, this is an awkward curve to work with. Depending on where the BJT "sits" on this curve, increasing or decreasing by a few millivolts could mean increasing current by a few nano-amps, micro-amps, or milliamps! If the slope were fixed, we could easily predict the output current based on the input voltage, but the slope changes constantly. (This is why we've been adjusting numbers and changing the voltage by non-arbitrary ±18mV increments.) 
+
+Luckily, we can use a straight line to approximate the curve about a particular point, called the "operating point". Provided we don't stray too far from the operating point, the straight line gives a reasonable approximation of nearby points on the curve. Notice that the points highlighted on the figure above are ±5mV away from the operating point — beyond this, the error between the curve and straight line gets worse. (This is the reason we've been restricting our amplifier input to a ±5mV range throughout the amplifier build!)
+
+<img src="res/straight-line-approx.png" height=300 />
+
+_A straight line (the derivative) approximates the current-voltage curve at a particular point._
+
+The slope of the straight-line approximation has units of $\frac{\text{Amps}}{\text{Volts}}$, or $\frac{I}{V}$, and is called the **transconductance** $g_m$. Its value [can be derived](gm-derivation.md) without too much difficulty by taking the derivative of the Ebers-Moll equation. The important result relating base-emitter voltage to collector current is:
+
+$$g_m = \frac{I_C \text{[A]}}{V_T \text{[V]}}$$
+
+Given an operating point on the transfer curve — meaning we set the DC offset $V_{BE}$ and know the associated current $I_C$ — we can calculate the conversion factor $g_m$ and use it to find the gain of a common-emitter amplifier.
+
+> **Naming conventions: AC vs DC**
+>
+> Operating-point values, as well as other constant, DC values, are typically denoted in capital letters: $V_{BE}$, $I_C$. When a value "wiggles" with small variations around an operating point, this is denoted using "small-signal" lowercase letters: $v_{be}$, $i_c$. The combination of the two components is denoted by a combination of upper- and lowercase letters: 
+> - $V_{be} = V_{BE} + v_{be}$
+> - $I_c = I_C + i_c$
+>
+> This also explains why $g_m$ is written in all lowercase letters: it gives the _change in current_ for a given _change in voltage_ about a _particular operating point_. 
+>
+> $$g_m = \frac{\partial I_c}{\partial V_{be}} = \frac{i_c}{v_{be}}$$ 
+
+> **About the name "transconductance"...**
+>
+> The units of the approximation's slope are $\frac{\text{Amps}}{\text{Volts}}$, or $\frac{I}{V}$. This looks like Ohm's Law: 
+>
+> $$V = IR$$
+>
+> $$R = \frac{V}{I}$$
+>
+> $$G = \frac{1}{R} = \frac{I}{V}$$
+>
+> G stands for **conductance**, and is defined as the reciprocal of resistance. It has the same units as the slope, but it's not quite what we're after. In this case, we are interested in **transconductance**, denoted $g_m$, which is the conversion factor that will help us calculate how _small variations_ in the input voltage _transfer_ across units to variations in the output current. (The prefix "trans-" means "across", while "conductance"  tells you the units of this conversion factor. It's not a literal "conductance".) 
+> 
+> This is nothing new — transconductance is just dimensional analysis: 
+>
+> Eg. How many minutes is 1 year? 
+>
+> 1 year = (1 year) * (365 days/year) * (12 hours / day) * (60 minutes / hour) = 262800 minutes
+
+Let's see how to use $g_m$. Assuming again that:
+
+- $V_{BE}$ = 0.6V (operating point)
+- $I_C$ = 1mA (operating point)
+- $R_C$ = 1kΩ
+
+We want to predict the currents, voltages, and gain seen at the output once we apply an AC oscillation.
+
+<img src="res/gm-ce-problem.png" height=300 />
+
+_All we know at first glance about this circuit is that it has $V_{BE}$ = 0.6V, $I_C$ = 1mA, $R_C$ = 1kΩ._
+
+We'll also assume that we know the input will be limited to ±5mV, although once we generalize our results, we'll be able to find gain without knowing the input voltage range. Using the lowercase notation to indicate small-signal variations, we can write this as $v_{be}$ = ±5mV.
+
+We can start by realizing that the voltage drop due to the constant DC offset $V_{BE}$ is $V_R = IR$ = (1mA)(1k) = 1V. This gives an output operating voltage of:
+
+$$V_{CC} - V_R \text{ = 10V - 1V = 9V}$$
+
+The limits of $V_{be}$ are given by
+
+$$V_{be} = 
+\left\{
+    \begin{array}{l}
+      595mV \implies I_c = ?\\
+      605mV \implies I_c = ?
+    \end{array}
+  \right.$$
+
+We wouldn't know $I_c$ at these voltages without using the Ebers-Moll equation, but using $g_m$ to approximate the change $i_c$:
+
+$$g_m = \frac{1 \text{ mA}}{25 \text{ mV}} = 0.04 \text{ } \frac{\text{Amps}}{\text{Volts}}$$
+
+$$i_c \approx 
+\left\{
+    \begin{array}{l}
+      (-5mV)(0.04 \frac{A}{V}) = -0.2 \text{ mA}\\
+      (+5mV)(0.04 \frac{A}{V}) = +0.2 \text{ mA}
+    \end{array}
+  \right.$$
+
+Therefore, we can calculate $V_{out}$ by finding the voltage variation caused by $i_c$, and add this to the constant (op-point) output of 9V:
+
+$$v_{out} \approx 
+\left\{
+    \begin{array}{l}
+      (-0.2mA)(1k\Omega) = -0.200V \implies V_{out} = 8.8V\\
+      (+0.2mA)(1k\Omega) = +0.200V \implies V_{out} = 9.2V
+    \end{array}
+  \right.$$
+
+In other words, we predict seeing a change in voltage ±200mV at the output. This is a gain of $|A| = \frac{0.200}{0.005} = 40$, which is close to the value we got earlier from measuring the simulation waveforms.
+
+One final trick we can apply is to notice that the voltage deviates from the op-point by a value determined by the current and resistance. However, for any small-signal input amplitude (±5mV, ±1mV, etc), the current is approximated by the conversion factor $g_m$. Therefore, we could write the total gain of the system as:
+
+$$|A| = g_m R_C$$
+
+If we plug in our values, we get $|A|$ = (0.04)(1kΩ) = 40. So we don't even need most of the steps above — once we have $g_m$, we can find gain by multiplying $g_m R_C$.
+
+To wrap up, here is a summary of equations we've used and that you'll find useful. The most important takeaways are these two equations, which allow us to find the transconductance and gain at any operating point:
+
+- $g_m = \frac{I_C}{V_T} = \frac{I_C}{0.025}$
+- $|A| = g_m R_C$
+
+If we need to calculate any intermediate values such as max/min voltages or currents, we can use: 
+
+- $I_c = I_C + i_c$
+	- $i_c = g_m v_{be}$
+- $V_{be} = V_{BE} + v_{be}$
+	- $v_{be} = i_c R_C$
+
+### The Differential Pair
+
+
+### Differential Amplifier
+
+
+
+ However, understanding how this works is the first step 
+
+Op-amps work by comparing two inputs (the inverting (-) and non-inverting (+) inputs). We've used op-amps before to copy ("buffer") a signal by returning the output to the input.
+
+<img src="res/buffer.png" height=250 />
+
+If we manipulate the feedback before its arrival at the inverting terminal, we can modify the values that the op-amp sees. For example, we could cut the feedback values in half via a voltage divider. 
+
+Imagine applying 5V to the input of the following circuit. If the output starts at 0V, the op-amp will compare $(V_+ - V_-) = 5 - 0$ and push current out in order to bring the output positive. In the buffer setup, the comparison $(V_+ - V_-) = 0$ is achieved when the output reaches 5V; however, with the voltage divider, an output of 5V will only cause 2.5V at the input! The output will continue to increase until it reads 5V at the inverting input, or 10V at the output. The "doubling" behavior holds for all practical inputs to this op-amp configuration, and more generally, an op-amp in this configuration is called a "non-inverting" op-amp. The formula for this is:
+
+$$V_{out} = V_{in+} (1 + \frac{R_f}{R_{g}})$$
+
+Notice that if we make $R_f = 0$ or $R_g = \infty$, the formula (and circuit) becomes the same as a buffer, following $V_{out} = V_{in+}$. 
+
+Op-amps are incredibly useful, and we'll see them more frequently soon. However, for a voltage-controlled amplifier, they
+
+<img src="res/non-inverting-2x.png" height=250 />
+
 
 
 ## 2.5 The Envelope Generator
