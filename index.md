@@ -47,6 +47,26 @@ The filter consists of a simple high- and low-pass stage, controllable via poten
 	- Resonance / Tank Circuits
 - Diodes
 
+### Op-Amps
+
+However, understanding how this works is the first step 
+
+Op-amps work by comparing two inputs (the inverting (-) and non-inverting (+) inputs). We've used op-amps before to copy ("buffer") a signal by returning the output to the input.
+
+<img src="res/buffer.png" height=250 />
+
+If we manipulate the feedback before its arrival at the inverting terminal, we can modify the values that the op-amp sees. For example, we could cut the feedback values in half via a voltage divider. 
+
+Imagine applying 5V to the input of the following circuit. If the output starts at 0V, the op-amp will compare $(V_+ - V_-) = 5 - 0$ and push current out in order to bring the output positive. In the buffer setup, the comparison $(V_+ - V_-) = 0$ is achieved when the output reaches 5V; however, with the voltage divider, an output of 5V will only cause 2.5V at the input! The output will continue to increase until it reads 5V at the inverting input, or 10V at the output. The "doubling" behavior holds for all practical inputs to this op-amp configuration, and more generally, an op-amp in this configuration is called a "non-inverting" op-amp. The formula for this is:
+
+$$V_{out} = V_{in+} (1 + \frac{R_f}{R_{g}})$$
+
+Notice that if we make $R_f = 0$ or $R_g = \infty$, the formula (and circuit) becomes the same as a buffer, following $V_{out} = V_{in+}$. 
+
+Op-amps are incredibly useful, and we'll see them more frequently soon. However, for a voltage-controlled amplifier, they
+
+<img src="res/non-inverting-2x.png" height=250 />
+
 ## Basic Waveforms
 - Square / Saw / Tri / Sine
 - Harmonics
@@ -677,7 +697,8 @@ _Increasing the offset by +36mV (look at the scope average = 636mV) causes simil
 
 It should be cautioned that these designs (so far) are not ideal to actually implement in a physical design. Without any current limiting, the risks of short-circuiting a transistor are very high. (Not that you can't do it — it may burn or blow up, though. Wear safety glasses, be ready to kill the power, and don't leave these circuits unattended!)
 
-Our previous approach of installing current-limiting resistors would address some issues, but the interaction changes the behavior by introducing a phenomenon called "degeneration". Despite its advantages (eg. increased linear input range and temperature stability), degeneration adds complexity and isn't essential for building an amplifier. However, it could be considered for [future designs]() once you have a working synth. 
+Our previous approach of installing current-limiting resistors would address some issues, but the interaction changes the behavior by introducing a phenomenon called "degeneration". Despite its advantages (eg. increased linear input range and temperature stability), degeneration adds complexity and isn't essential for building an amplifier. However, it could be considered for [future designs]() once you have a working synth.
+
 
 ##### Limits to Gain
 There is an upper limit on $R_C$, which we saw when  looking at BJTs earlier: if $R_C$ grows too large, the BJT's ability to set current will be overriden by the larger resistance. In this case, $R_C$ should be below 10kΩ. As it approaches this value, any "request" for 1mA of current will be denied — even if we max out $V_{be}$ to open the BJT "valve" completely, the maximum current flow will be dependent on $R_C$. (Ohm's Law: $I = \frac{V_R}{R} = \frac{10V}{10k\Omega} = \text{1mA}$.)
@@ -708,7 +729,7 @@ In simulation, we can increase the gain to $A$ ≈ 300 before hitting saturation
 
 Both approaches illustrate an important lesson: we must control $R_C$ and/or $V_{be}$ appropriately. Too large, and the output voltage swings too low, causing saturation. Too small, and any changes in current caused by "wiggles" at the base won't translate to noticeable $\Delta V_{out}$. 
 
-Complicating matters, the output will oscillate with gain, meaning that **all points** on the output voltage must be considered. If any of the output is below the base voltage, saturation will occur. For example, in the figure below, the constant DC input (0.657 V) to the circuit on the left causes an output voltage of 0.937V — which feels dangerously close to the base voltage, but is fine in theory. However, with an input of ±5mV and gain $|A|$ ≈ 300, the output will attempt to reach 
+Complicating matters, the output oscillates, meaning that **all points** on the output voltage must be considered — not just the DC offset. If _any_ of the output is below the base voltage, saturation will occur. For example, in the figure below, the constant DC input (0.657 V) to the circuit on the left causes an output voltage of 0.937V — which feels dangerously close to the base voltage, but is fine in theory. However, with an input of ±5mV and gain $|A|$ ≈ 300, the output will attempt to reach 
 
 $$V_{out,min} = 0.937V - (300)(5mV) = 0.937 - 1.5 = -0.563V$$
 
@@ -719,6 +740,8 @@ which is below GND! Open the simulation and hover over the second BJT to see tha
 _This circuit doesn't _seem_ like it should saturate with only DC input, but with an oscillating input and -300x ideal gain, it saturates and distorts. [[Falstad]](https://tinyurl.com/2l8yz2gc)_
 
 Note this *might* be something you want [in future designs]() — audio is a field where distortion can be a good thing! For now, though, we're looking to amplify without altering the sound much, so we will try to avoid saturation.
+
+Finally, the biggest problem these designs suffer from is that the output signal shifts as gain changes. You might have noticed this as you changed the base voltage offset — small gains cause small voltage drops, and output oscillates near the positive rail; large gain causes larger voltage drops, and output oscillates closer to 0V. If we are going to implement variable gain into our amplifier, we need a signal that is predictable and constant. A differential pair (which we are building toward) will give us the tools to create constant-offset output, even with changing gain.
 
 ##### Quantifying Gain With Transconductance
 > Our first "Theory" warning! This section is optional, but highly encouraged. So far we've been adjusting the gain of the CE amplifier, measuring the output waveform, and comparing $V_{pp}$ to find gain. However, we can develop our theoretical knowledge to solve for gain, uncovering some relationships and equations that will be useful later in our study of differential pairs.
@@ -781,7 +804,7 @@ Given an operating point on the transfer curve — meaning we set the DC offset 
 >
 > 1 year = (1 year) * (365 days/year) * (12 hours / day) * (60 minutes / hour) = 262800 minutes
 
-###### An Example Using gm
+###### Using gm To Predict Gain
 
 Assuming again that:
 
@@ -789,7 +812,7 @@ Assuming again that:
 - $I_C$ = 1mA (operating point)
 - $R_C$ = 1kΩ
 
-We want to predict the currents, voltages, and gain seen at the output once we apply an AC oscillation.
+We want to predict the currents, voltages, and gain  at the output once we apply an AC oscillation.
 
 <img src="res/gm-ce-problem.png" height=300 />
 
@@ -811,7 +834,7 @@ $$V_{be} =
     \end{array}
   \right.$$
 
-We wouldn't know $I_c$ at these voltages without using the Ebers-Moll equation, but using $g_m$ to approximate the change $i_c$:
+We wouldn't know $I_c$ at these voltages without using the Ebers-Moll equation, but using $g_m$ to approximate the change $i_c$ makes this simple:
 
 $$g_m = \frac{1 \text{ mA}}{25 \text{ mV}} = 0.04 \text{ } \frac{\text{Amps}}{\text{Volts}}$$
 
@@ -828,20 +851,23 @@ Therefore, we can calculate $V_{out}$ by finding the voltage variation caused by
 $$v_{out} \approx 
 \left\{
     \begin{array}{l}
-      (-0.2mA)(1k\Omega) = -0.200V \implies V_{out} = 8.8V\\
-      (+0.2mA)(1k\Omega) = +0.200V \implies V_{out} = 9.2V
+      (-0.2mA)(1k\Omega) = -0.200V \implies V_{out,low} = 8.8V\\
+      (+0.2mA)(1k\Omega) = +0.200V \implies V_{out,high} = 9.2V
     \end{array}
   \right.$$
 
 In other words, we predict seeing a change in voltage ±200mV at the output. This is a gain of $|A| = \frac{0.200}{0.005} = 40$, which is close to the value we got earlier from measuring the simulation waveforms.
 
-One final trick we can apply is to notice that the voltage deviates from the op-point by a value determined by the current and resistance. However, for any small-signal input amplitude (±5mV, ±1mV, etc), the current is approximated by the conversion factor $g_m$. Therefore, we could write the total gain of the system as:
+One final trick we can apply is to notice that the voltage deviates from the op-point by a value determined by the current and resistance. However, for _any_ small-signal input amplitude (±1mV, ±5mV, etc — though the approximation gets worse beyond this), the current is approximated by the conversion factor $g_m$. Therefore, we could write the total gain of the system as:
 
 $$|A| = g_m R_C$$
 
 If we plug in our values, we get $|A|$ = (0.04)(1kΩ) = 40. So we don't even need most of the steps above — once we have $g_m$, we can find gain by multiplying $g_m R_C$.
 
-To wrap up, here is a summary of equations we've used and that you'll find useful. The most important takeaways are these two equations, which allow us to find the transconductance and gain at any operating point:
+###### Summary
+Transconductance $g_m$ allows us to predict how current will change, given small changes to $V_{be}$. This is important because the relationship between BJT current and base-emitter voltage is exponential — by restricting the range of $V_{be}$, we can treat this relationship as linear with constant-slope.
+
+The most important takeaways are these two equations, which allow us to find the transconductance and gain at any operating point. 
 
 - $g_m = \frac{I_C}{V_T} = \frac{I_C}{0.025}$
 - $|A| = g_m R_C$
@@ -854,31 +880,137 @@ If we need to calculate any intermediate values such as max/min voltages or curr
 	- $v_{be} = i_c R_C$
 
 ### The Differential Pair
+We are now ready to understand the core of the synth amplifier: a differential pair. This looks somewhat different from the common-emitter amplifier from before, but it's operation is very similar and we have developed all the tools we'll need to understand how it works. The added complexity is worth it, though, because:
+
+1. Current through a differential pair is easy to control. Current determines gain (via $g_m$), and this is how we will achieve variable gain.
+2. A differential pair has two outputs which we can use to create a constant-offset output. A basic common-emitter amplifier shifts its output as gain changes, which would be unusable for our purposes.
+
+We'll address both of those advantages soon; first we need to learn about the diff pair! The image below shows the diff pair with oscilloscope plots for the input and two outputs. You don't need to understand this yet; it's just helpful to know what we're building toward. Notice that the input waveform (left) and the output **Out+** (right) look similar, while the output **Out-** (center) looks inverted. This is important because it gives us two copies of the signal, which is the key allowing us to fix the output voltage drift.
+
+<img src="res/diff-pair.png" height=400>
+
+_Differential pair [[Falstad]](https://tinyurl.com/2fnghd9h)_
+
+The left branch features a common-emitter amplifier with our input signal at the base. We know that common-emitters invert, so this explains the inverted output at **out-**. However, unlike before, the input signal is not floating about 0.6V, but is instead centered about 0V. This will be explained shortly.
+
+The right branch has a similar common-emitter amplifier — only the "input" of the base is connected to GND, and somehow its output shows a copy of the left-branch's input! (Differential pairs can be used in different configurations, but we will be studying a single-input, dual-output configuration because we only have one input signal.) 
+
+As before, analysis is simpler by considering the system with constant DC input. 
+
+#### DC Approximations
+
+##### 0V Input
+
+<img src="res/diff-pair-dc.png" height=400 />
+
+_Differential pair, DC offset = 0V. [[Falstad]](https://tinyurl.com/2kqtqmpq)_
+
+ In this view, we set the input to match GND at 0V, so that both branches are symmetric. Because the BJT emitters are connected, this means their $V_{BE}$ are the same, so they ought to conduct the same current. The ammeter at the top shows 2mA flowing into the circuit, so equal current flow implies that 1mA flows through each branch. In our _adjusted_ BJT model, 1mA current flow occurs during forward-active mode, with $V_{BE}$ = 0.6V — therefore, with the bases at 0V and a $V_{BE}$ drop of 0.6V, the emitter must be at -0.6V. This fact is what allows our input to have a 0V DC offset, instead of the 0.6V offset we had before — the offset has simply been shifted to bring the emitter 0.6V _below_ GND!
+
+ The resistor at the bottom of the circuit, $R_{tail}$, connects the emitters to the -10V rail, and functions as a basic current source. We assume the base-emitter drop sets the emitter around -0.6V, so the resistor must have a voltage drop of 9.4V. By Ohm's Law, current can be set by choosing a resistor value; in this case, we want 2mA when connected to -10V, so 4.7kΩ^[Not really 4.7... In attempting to get an approximation yielding 1mA, I'm using 4.653kΩ. This is necessary because the base adds some non-negligible current beyond 2mA.] gives $I_{tail} = \frac{9.4V}{4.7k\Omega}$ ≈ 2mA. ^[Technically, our analysis began by noticing that the circuit "draws 2mA" as a given. Causally-speaking, the reason the circuit draws 2mA and the base-emitter voltage is 0.6V is _because_ the resistor is sized for 2mA to flow, under the assumption that $V_{BE}$ is 0.6V. There's a lot of "chicken-and-egg" reasoning with transistors, and sometimes the way to solve it is to start with an assumption that the transistor is ON and therefore $V_{BE}$ _must be_ 0.6V.)]
+
+Finally, the collector resistors $R_C$ have been changed to 6kΩ. This is done to increase gain without saturating. Each branch current has 1mA, so the resistors drop $V_{R_C} = (1mA)(6k\Omega) = 6V$ from the 10V positive rail. This places the output at (10V - 6V) = 4V, which is near but not below the 0V base voltage, keeping the transistors out of saturation. 
+
+##### +5mV Input
+In a common-emitter amplifier with op-point $I_C$ = 1mA, we expect that a ±5mV change to the base-emitter voltage causes a current change of ±0.2mA. (Recall that $g_m = \frac{I_C}{V_T} = \frac{1mA}{25mV}$, so $i_c = g_m v_{be} = \frac{1mA}{25mV}(5mV)$ = 0.2mA.) When we try this in simulation, though, we only see a 0.1mA increase! This is half the current we expect, indicating we're missing something.
+
+<img src="res/diff-pair-1ma-wtf.png" height=300 />
+
+_The diff pair with 5mV at the input gives half the current we might expect. [[Falstad]](https://tinyurl.com/2e5tax5f)_
+
+The easy way out is to say, "The interaction of the two amplifiers causes input signal changes to have half the total effect as they would in a single common-emitter amplifier." This is true, but why? Let's start by stating what we _do_ understand. 
+
+While the current-setting resistor, $R_{tail}$, is not ideal, it is good enough to trust the total current draw is still ≈ 2mA. A 0.1mA change in current would require greater than 50mV change in the emitter node voltage, and this seems unlikely. (One of the bases is tied to 0V GND, so this would cause more than _two_ 18mV jumps in $V_{be}$ — meaning the current would need to change by more than a factor of 4!) Therefore (even if it weren't indicated by the ammeters) we can still safely assume that this circuit is drawing 2mA in total. 
+
+If the current through a branch changes, then that branch's $V_{be}$ must have changed also. The base voltages are fixed. (We manually set one to 5mV, and the other is tied to 0V GND.) Therefore, the emitter node must not be at -0.6V any longer. We've found something unexpected — if we think through a few hypothetical scenarios, we can figure out what is happening. 
+
+First, let's assume the node is still at -0.6V. If it _were_, then the left-branch transistor would have the expected $V_{be-}$ = 605mV, but the right-branch BJT would still be at $V_{be+}$ = 600mV. This is problematic because we know $(V_{be} = 600mV) \implies (I_{c} = 1mA)$ — yet if the current is 2mA, we can't possibly have 1.2mA and 1mA through each respective branch! The sketch below illustrates this logic.
+
+<img src="res/diff-pair-assume-600mv.png" height=400 />
+
+_If the emitter node stays at -0.6V, then the left branch must conduct 1.2mA while the right continues to conduct 1mA. But we know that the circuit only uses 2mA in total._
+
+Admitting that the emitter node _must_ raise its voltage, we might reason that the base only went up 5mV — at most, the emitter node would rise 5mV. If we assume this condition, then the emitter node voltage becomes $V_e$ = -595mV. This causes the left-branch $V_{be-}$ = 600mV, meaning it continues to conduct 1mA. However, now the right-branch $V_{be+}$ = 595mV. From $g_m$, we know that $(v_{be} = -5mA) \implies (i_c = -0.2mA)$, so $V_{be}$ of 595mV causes current flow to reduce to 0.8mA. This is similarly problematic, because the branches would conduct 1.8mA in total! However, iIt seems reasonable that the unaccounted-for 0.2mA might be split evenly between the branches — after all, within small base-emitter changes, current variations _approximate_ a constant slope. 
+
+<img src="res/diff-pair-assume-595mv.png" height=400 />
+
+_If the emitter voltage is -595mV, then the left-branch current is 1mA, but the right-branch current is only 0.8mA. It seems likely that the remaining current might split evenly between both branches._
+
+Splitting the remaining 0.2mA across both branches brings each branch current to 1.1mA and 0.9mA, respectively. The $V_{be}$ required to achieve this is halfway between the two extremes we considered: on the left branch, $V_{be-}$ = 602.5mV, and on the right, $V_{be+}$ = 597.5mV. This gives an emitter voltage which agrees with both branches: -597.5mV is 602.5mV away from the +5mV input, and 597.5mV away from GND at the other BJT base. 
+
+<img src="res/diff-pair-assume-597-5mv.png" height=400 />
+
+_Base-emitter voltages agree at a halfway point between the two extremes, allowing the branch currents to total 2mA._
+
+Input signals in a differential pair, then, "pull" the emitter voltage up proportional to the base voltage; however, this action is opposed by the grounded BJT as it opens its base-emitter voltage to allow the extra current through. The pair fight to establish a $V_{be}$ which satisfies the current demands on both branches, and (due to linearity) the equilibrium point is halfway in-between. 
+
+This updates our equations for the differential amplifier:
+
+- $I_C = \frac{I_{tail}}{2}$
+- $g_m = \frac{I_C}{2V_T} = \frac{I_C}{2*25mV}$
+- $|A_{diff}| = g_m R_C = \frac{ R_C}{2}$
+
+Try it out to realize that:
+
+$$g_m = \frac{1mA}{0.025V} = 0.04 \implies g_{m(eff)} = 0.02$$
+
+$$|A| = g_{m(eff)}R_C = (0.02)(6k\Omega) = 120$$
+
+From the simulation, $|A| = \frac{(4.579 - 3.419) V}{10mV} = 116$, which agrees with what we predicted!
+
+<img src="res/diff-pair.png" height=300 />
+
+_Simulation results and theory agree. [[Falstad]](https://tinyurl.com/2k3bu95x)_
+
+#### Adjustable Gain
+Gain is dependent on $g_m$, which is determined by the op-point current $I_C$. While $V_{be}$ changes slightly with changing current, it doesn't change _much_ — we can basically rely on it being 0.6V while the transistors are conducting in forward-active mode. Therefore, current is entirely set by the resistor and negative voltage rail in the circuit. We've had adjustable gain the whole time!
+
+We _could_ change current by modifying the resistance (eg. via a potentiometer), but to achieve voltage control, we can simply adjust the negative rail of the differential amplifier. "More negative" values will conduct more current across the same resistance, increasing gain in the circuit. As an added benefit, this method of gain control is _linear_, not exponential, so amplitude changes proportionally with the negative rail. 
+
+In the simulation below, moving the slider adjusts the negative rail and changes the gain at the outputs. Note that the output scopes are set at a fixed vertical scale, which makes it easier to see how the signal changes with different bias voltages.
+
+<img src="res/diffamp-gain-adj.gif" height=350 />
+
+_Adjusting gain is as easy as changing the negative rail. [[Falstad]](https://tinyurl.com/2qqkdhbt)_
+
+To allow gain to be set via CV in the range of [0, +5V], we can configure an inverting op-amp to re-scale CV with negative gain. An inverting op-amp has gain $A = -\frac{R_f}{R_{in}}$, so we can double the CV range by choosing $R_f$ = 20kΩ and $R_{in}$ = 10kΩ.
+
+<img src="res/diff-pair-cv-gain.png" height=400 />
+
+_Using an inverting op-amp, CV from [0V, 5V] provides the [0V, -10V] negative voltage source we need. [[Falstad]](https://tinyurl.com/2kpmlhkh)_
 
 
-### Differential Amplifier
+#### Removing Output Offset
+The differential pair provides us with two identical, inverted outputs that have the same DC offset. Conveniently, subtracting these two signals will remove what they have in common, while adding their differences. 
 
+<img src="res/desmos-remove-common.png" height=200 />
 
+_Subtracting two signals with the same offset removes the offset and sums the oscillations. [[Desmos]](https://www.desmos.com/calculator/7himosjhch)_
 
- However, understanding how this works is the first step 
+We could pass these two outputs into another differential pair, this time using both "base" inputs to subtract one from the other — but because we don't need adjustable gain, we can use an op-amp. This configuration, called a "differential amplifier" effectively does what our differential pair does. (In fact, the differential pair that we've been using is a core component that op-amps use internally!) The differential amplifier applies negative feedback to subtract two signals according to the formula:
 
-Op-amps work by comparing two inputs (the inverting (-) and non-inverting (+) inputs). We've used op-amps before to copy ("buffer") a signal by returning the output to the input.
+$$V_{out} = \frac{R_f}{R_{in}}(V_{in+} - V_{in-})$$
 
-<img src="res/buffer.png" height=250 />
+<img src="res/diffamp.png" height=300 />
 
-If we manipulate the feedback before its arrival at the inverting terminal, we can modify the values that the op-amp sees. For example, we could cut the feedback values in half via a voltage divider. 
+Applying this to the amplifier circuit, we can connect both of the diff pair's outputs to the inputs of the differential amplifier, setting the gain ratio via $R_f / R_{in}$ to apply any additional gain we might need to the signal. The final circuit then becomes:
 
-Imagine applying 5V to the input of the following circuit. If the output starts at 0V, the op-amp will compare $(V_+ - V_-) = 5 - 0$ and push current out in order to bring the output positive. In the buffer setup, the comparison $(V_+ - V_-) = 0$ is achieved when the output reaches 5V; however, with the voltage divider, an output of 5V will only cause 2.5V at the input! The output will continue to increase until it reads 5V at the inverting input, or 10V at the output. The "doubling" behavior holds for all practical inputs to this op-amp configuration, and more generally, an op-amp in this configuration is called a "non-inverting" op-amp. The formula for this is:
+<img src="res/amplifier-sim-10v-adj-is.png" height=300 />
 
-$$V_{out} = V_{in+} (1 + \frac{R_f}{R_{g}})$$
+_An amplifier simulation (using adjusted SPICE model!). The differential amplifier applies 5x gain to the difference of out- and out+. [[Falstad]](https://tinyurl.com/2go2488g)_
 
-Notice that if we make $R_f = 0$ or $R_g = \infty$, the formula (and circuit) becomes the same as a buffer, following $V_{out} = V_{in+}$. 
+Remember that we've been using transistors with edited SPICE models for mathematical simplicity. Be sure to use normal SPICE models when choosing values for your amplifier design, or see the [Build Notes] section for an implementation.
 
-Op-amps are incredibly useful, and we'll see them more frequently soon. However, for a voltage-controlled amplifier, they
+### Build Notes
 
-<img src="res/non-inverting-2x.png" height=250 />
+_**Under Construction**_
+Make the tail resistor big and use large sink voltage range to get a better current source. Think about how the vbe changes in millivolts; the larger the sink voltage magnitude, the less a millivolt change will affect current.
 
+For this reason, current will diminish a lot. This is okay, and the amp doesn't need to use a lot of current to be effective. Just use bigger resistors. Very large resistors might introduce more noise, but 50k and u-amp range seems to be fine.
 
+Install a trimmer in the inverting op-amp so that you can adjust the max gain of the amplifier. You want a max-input signal (±5mV) to hit 1Vpp at the output. Or 5Vpp. Depends on what speakers you plug into. Try out the speakers and see what sounds good vs when they distort.
+
+Include implementation in Falstad of actual amp, using un-adjusted SPICE models.
 
 ## 2.5 The Envelope Generator
 
