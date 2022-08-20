@@ -1,7 +1,5 @@
 <h1 align="center">AES Synthesizer System Design</h1>
 
-# WARN: This is incomplete.
-I'm publishing continuously to this document, but this may mean things aren't written how they will eventually be. To view the last "checkpoint" that I'm happy with, check [here](https://github.com/algoldst/thesis/blob/aefd42a801fd035794afdbf1e6ce985e7cbb5c18/index.md).
 
 # Table of Contents
 - [0.0 The Goal](#00-the-goal-and-what-to-expect)
