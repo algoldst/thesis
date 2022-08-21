@@ -288,7 +288,7 @@ Because of its similarity to the low-pass RC filter, we have most of the intuiti
 
 <img src="res/rc-hp-schematic.png" height=300 />
 
-The following output shows the high-pass filter's response to a 1V square wave input. The key to understanding it is making sense of a series-connected capacitor. Recall that a capacitor cannot instantaneously change the voltage across its parallel plates. Therefore, if the voltage on one side of the capacitor changes, the other side of the capacitor must also change by an equal amount. In this way, a capacitor might be thought of as similar to a flexible membrane or a flexible wall — while charges cannot pass _through_ it, any changes in their pressure will be felt on the opposite side. Let's walk through the step response to understand how this behavior creates the step response shown.
+The following output shows the high-pass filter's response to a 1V square wave input. The key to understanding it is making sense of a series-connected capacitor. Recall that a capacitor cannot instantaneously change the voltage across its parallel plates. Therefore, if the voltage on one side of the capacitor changes, the other side of the capacitor must also change by an equal amount. In this way, a capacitor might be thought of as similar to a flexible membrane or a flexible wall — while charges cannot pass _through_ it, any changes in their pressure will be felt on the opposite side.^[I _think_ this analogy is developed by Moritz in one of his videos, and it's probably where I first saw it. I didn't see it anywhere when I scanned his [VCF series](https://youtu.be/3tMGNI--ofU), but it's got to be somewhere around there.] Let's walk through the step response to understand how this behavior creates the step response shown.
 
 Before any input is connected, we assume the capacitor has 0V across it. All nodes in the circuit are at 0V, and nothing interesting is happening.
 
@@ -325,6 +325,8 @@ $$f_c = \frac{1}{2\pi R C} \text{Hz}$$
 As a first-order filter, it also obeys the same attenuation factor, however in the opposite direction: +6db/octave. The only difference is the positive slope, which flips the direction that the filter attenuates frequencies from the cutoff point.
 
 <img src="res/hp-bode.jpg" height=300 />
+
+_From [[Sweetwater]](https://www.sweetwater.com/insync/what-is-a-highpass-filter-when-should-i-use-it/)_
 
 ### Build Notes From The Filter
 
