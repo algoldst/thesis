@@ -294,28 +294,37 @@ The following output shows the high-pass filter's response to a 1V square wave i
 
 >I _think_ this analogy is developed by Moritz in one of his videos, and it's probably where I first saw it. I didn't see it anywhere when I scanned his [VCF series](https://youtu.be/3tMGNI--ofU), but it's got to be somewhere around there.] 
 
-Let's walk through the step response to understand how this behavior creates the step response shown.
+Let's walk through the step response to understand how this behavior creates the step response shown. Drawings show how charges near the capacitor's "output-side" plate react throughout this process.
 
 Before any input is connected, we assume the capacitor has 0V across it. All nodes in the circuit are at 0V, and nothing interesting is happening.
 
-<img src="res/hp-cap1.png" height=300 />
+<img src="res/hp-cap1.png" height=200 />
+
+_Time is denoted by the vertical blue line — we are currently looking at the circuit before input is applied. Charges (purple) are drawn on the right side only for simplicity._
 
 At the moment we connect 1V at the input, the voltage at the capacitor's input jumps too. Think of this as the capacitor experiencing increased pressure at its input. In order for the capacitor to maintain 0V across it, it must also exert 1V "pressure" on everything to the right of it. This causes the initial "spike" seen at the output. The output voltage is now at higher pressure, establishing a 1V pressure difference across the resistor and causing current flow to ground. 
 
-<img src="res/hp-cap2.png" height=300 />
+<img src="res/hp-cap2.png" height=200 />
+
+_The input rises to 1V, pushing on the capacitor membrane and transferring this pressure change to the charges on the other side._
 
 As current flows from the right-side capacitor plate through the resistor, the output begins to fall according to the RC time constant, until the right side of the capacitor reaches equilibrium at 0V. Importantly, in draining charges to ground, there is now (-1V) established across the capacitor.
 
-<img src="res/hp-cap3.png" height=300 />
+<img src="res/hp-cap3.png" height=200 />
 
-Finally, the input drops again to 0V. This drops the capacitor's left-side voltage by 1V, back to 0V. Because the capacitor has (-1V) across its plates, dropping the left side by 1V (from 1V to 0V) must also drop the right side by 1V (from 0V to -1V). Without the 1V "pressure" flexing the capacitor wall toward the right, a vacuum of (-1V) appears at the output. This causes the second, negative "spike" seen at the output, and a (-1V) differential across the resistor to ground. 
+_As the input remains at 1V, charges on the right side of the capacitor flow away toward lower pressure, across the resistor (not pictured) to ground._
 
-<img src="res/hp-cap4.png" height=300 />
+The input drops again to 0V. This drops the capacitor's left-side voltage by 1V, back to 0V. Because the capacitor has (-1V) across its plates, dropping the left side by 1V (from 1V to 0V) must also drop the right side by 1V (from 0V to -1V). Without the 1V "pressure" flexing the capacitor wall toward the right, a vacuum of (-1V) appears at the output. This causes the second, negative "spike" seen at the output, and a (-1V) differential across the resistor to ground. 
+
+<img src="res/hp-cap4.png" height=200 />
+
+_The input falls to 0V and stops pushing the capacitor membrane. As the membrane returns to its starting position, this creates a gap of negative pressure (-1V) for charges to fill in._ 
 
 With a -1V voltage established, current begins to flow _up_ the resistor (from higher 0V pressure to lower -1V pressure) onto the capacitor's right plate. As charges accumulate, the right side of the capacitor rises according to the RC curve, until it returns to 0V.
 
-<img src="res/hp-cap5.png" height=300 />
+<img src="res/hp-cap5.png" height=200 />
 
+_As the input remains at 0V, charges on the right side of the capacitor enter from ground through the resistor, filling in the empty space and returning the pressure to 0V._ 
 
 #### High-Pass Output
 A high-pass filter's output typically looks sharper and more "jagged" than the original signal, as it allows only the highest frequency content through to the output. Applying this filter to a square wave, we get output that has more high-frequency characteristics as we increase the resistance. 
