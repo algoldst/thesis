@@ -47,12 +47,6 @@ The filter consists of a simple high- and low-pass stage, controllable via poten
 
 ### Op-Amps
 
-However, understanding how this works is the first step 
-
-Op-amps work by comparing two inputs (the inverting (-) and non-inverting (+) inputs). We've used op-amps before to copy ("buffer") a signal by returning the output to the input.
-
-<img src="res/buffer.png" height=250 />
-
 If we manipulate the feedback before its arrival at the inverting terminal, we can modify the values that the op-amp sees. For example, we could cut the feedback values in half via a voltage divider. 
 
 Imagine applying 5V to the input of the following circuit. If the output starts at 0V, the op-amp will compare $(V_+ - V_-) = 5 - 0$ and push current out in order to bring the output positive. In the buffer setup, the comparison $(V_+ - V_-) = 0$ is achieved when the output reaches 5V; however, with the voltage divider, an output of 5V will only cause 2.5V at the input! The output will continue to increase until it reads 5V at the inverting input, or 10V at the output. The "doubling" behavior holds for all practical inputs to this op-amp configuration, and more generally, an op-amp in this configuration is called a "non-inverting" op-amp. The formula for this is:
@@ -61,9 +55,9 @@ $$V_{out} = V_{in+} (1 + \frac{R_f}{R_{g}})$$
 
 Notice that if we make $R_f = 0$ or $R_g = \infty$, the formula (and circuit) becomes the same as a buffer, following $V_{out} = V_{in+}$. 
 
-Op-amps are incredibly useful, and we'll see them more frequently soon. However, for a voltage-controlled amplifier, they
 
 <img src="res/non-inverting-2x.png" height=250 />
+
 
 ## Basic Waveforms
 - Square / Saw / Tri / Sine
@@ -343,37 +337,11 @@ As a first-order filter, it also obeys the same attenuation factor, however in t
 
 _From [[Sweetwater]](https://www.sweetwater.com/insync/what-is-a-highpass-filter-when-should-i-use-it/)_
 
-### Build Notes From The Filter
+### Combining Low-Pass and High-Pass Filters
+Cascading filters allows us to selectively filter high frequencies, low frequencies, or both simultaneously. However, we cannot simply connect the input of one filter into the output of the other, as this will create a kind of "voltage" divider between the impedances of the two filters. It wouldn't sound _bad_, and would still provide decent filtering, but it would change the overall filter behavior and can be avoided. Fixing this involves learning how to isolate each circuit so that its behavior is unchanged by circuits that it connects to. This will help us now, but additionally, this ability is so useful that we'll see its application in every circuit we make from now on: op-amp buffering.
 
-_**Under construction**_
-
-BB layout from Schematic 
-Leave room for the HP filter soon!
-
-Use a non-polarized capacitor, eg. ceramic. 
-
-Notes about how capacitors are fixed, but we can use a potentiometer to vary cutoff
-
-Open question for students about how they want to trade sensitivity for filter cutoff range
-
-## 2.3 The Oscillator
-The oscillator is the core of any synthesizer, generating periodic signals that we recognize as sound. There are many circuits which produce oscillations, but in general, oscillators can be categorized as either harmonic or relaxation.
-
-| | Harmonic | Relaxation |
-|---|----|----|
-| **Feedback Mechanism:** | Amplification | Switching |
-| **Method:** | Excites oscillations in a resonator (eg. crystal) | Repetitively charges/discharges an energy-storage device to a threshold |
-| **Output:** | Sinusoidal | Non-linear (square / triangle / saw) |
-| **Example:** | ![](res/signal-example-harmonic.png) | ![](res/signal-example-relaxation.png) |
-
-While many synthesizers can output sinusoidal signals, sinusoids lack harmonics and therefore provide limited options for shaping the sound using subtractive filters. Therefore, we will build a relaxation oscillator, which can produce a waveform that is rich in harmonics. 
-
-Sawtooths are frequently preferred for synthesis because they contain both even and odd harmonics, giving additional flexibility when shaping signals through a filter.[^mit_syw] (For a review of waveform harmonics, refer to [Basic Waveforms](#basic-waveforms).) A sawtooth core also provides flexibility for further development down the line, as it can be processed to produce other waveforms such as rectangular and triangle waves. 
-
-A quick Google search will provide many relaxation oscillator designs. We will use a relatively simple sawtooth core design sourced from [Moritz Klein's YouTube channel](https://www.youtube.com/watch?v=QBatvo8bCa4). In order to understand how it works, we need to learn about comparators and hysteresis.
-
-### Comparators
-Comparators can be thought of as a subset of a more general device we'll examine first, called an "operational amplifier." These devices have two inputs (the non-inverting **In+**, and the inverting input **In-**) and a single output (**Out**), and are represented in schematics by a triangle like so: 
+#### Op-Amp Buffering
+Operational amplifiers are a general-purpose integrated circuit. These devices have two inputs (the non-inverting **In+**, and the inverting input **In-**) and a single output (**Out**), and are represented in schematics by a triangle like so: 
 
 <img src="res/ideal-opamp.jpg" height=200 />
 
@@ -395,6 +363,89 @@ You might imagine a few ways this could go:
 | 5 | -3 | $10^5 * (8)$ | $8*10^5$ |
 | -5 | -3 | $10^5 * (-2)$ | $-2*10^5$ |
 
+However, we don't typically have two signals, but one. This leaves one input free, and while we _could_ connect this to 0V GND, this proves to be a very bad idea in practice. With such large gain, even the slightest millivolt-level noise would cause voltages in the hundreds — we simply don't need this much gain! Luckily, we can solve this problem with _negative feedback_.
+
+We've used an op-amp previously in the speaker output buffer. There, we connected the non-inverting (+) input to our signal, and fed the output back to the inverting (-) input. This configuration forms negative feedback by causing the op-amp to continuously subtract its current output from the input signal. The result is a self-correcting feedback loop that minimizes error over time.
+
+<img src="res/buffer.png" height=250 />
+
+Here's how this works: Let's assume you are driving 50mph, and want to accelerate to 60mph. If we define "error" as the difference between _what you want_ (desired) and _what you have_ (reality), then
+
+$$\text{error} = (\text{desired}) - (\text{actual})$$
+
+Your error is +10mph — you need to _increase_ your speed by 10mph to hit your target. As you increase your speed, the error minimizes as the difference between 60mph and your current speed shrinks to 0.
+
+Systems in negative feedback always seek to minimize error. For the op-amp buffer, error becomes zero when the output is the same as the input. This forms a "buffer" which provides a 1:1 copy of our signal at the output.
+
+This seems useless at first, because the output is the exact same as the input. However, op-amps are special because they obey two important rules:
+
+1. The input impedance is extremely high.
+2. The output impedance is extremely low.
+
+A high input impedance means that, to any circuit connected to the op-amp's inputs, the op-amp appears similar to a massive resistor. Recall that resistance is a measure of opposition to current flow, and this means that an ideal op-amp draws 0 current. We can connect an op-amp to highly sensitive circuits, and because no current flows into its input terminals, the circuit won't be disturbed. In the ideal case, a circuit connected to an op-amp's input doesn't even see the op-amp as being there at all.
+
+A low output impedance means that, to any circuit connected to the op-amp's output, the op-amp appears to provide output without any resistance of its own. Again, because resistance quantifies opposition to current, this means that an ideal op-amp does not oppose the output current at all. It simply provides the voltage level that it is supposed to provide at the output, without introducing any additional resistance in-between.
+
+#### Buffering The Filter
+To apply the op-amp buffer to our filter cascade, we simply place the buffer between the output of the first filter and the input of the second. The simulation below shows how this works, with the op-amp providing a copy from the first filter as input to the second. Because of the high input impedance, the op-amp doesn't affect the high-pass filter, and because of the low output impedance, it simply supplies the signal to the low-pass filter, without introducing any additional resistance to the circuit. 
+
+<img src="res/filter-cascade-opamp.png" height=350 />
+
+_Buffered HP/LP filter cascade. [[Falstad]](https://tinyurl.com/2jonbux3)_
+
+The sliders in the simulation above are renamed to "Cutoff" and mapped backwards, such that a high cutoff causes low resistance, and vice versa. This is necessary because, as users of the device, we likely want to consider the filter's behavior, and not the component values, when using it. Because cutoff frequency _decreases_ with increased resistance, the cutoff slider should intuitively reflect that. 
+
+Perhaps confusingly, to allow all frequencies to pass through, the low-pass filter needs to be set to a _high_ cutoff, while the high-pass filter needs to be set to a _low_ cutoff. The image below shows how this looks graphically, as well as the Falstad slider positions which correspond to this setup. Conversely, blocking all frequencies can be accomplished by setting the low-pass cutoff low, and the high-pass cutoff high: when each filter subtracts as much frequency content as it can, this results in heavy signal attenuation at the output.
+
+<img src="res/fabfilter-eq.png" height=450 />
+
+_A high low-pass cutoff frequency + low high-pass cutoff frequency allows all frequency content through undisturbed. [Source: [[HeroicAcademy]](https://heroic.academy/how-to-mix-music-mixing-guide-part-3/)_
+
+
+### Build Notes From The Filter
+
+_**Under construction**_
+
+BB layout from Schematic 
+Leave room for the HP filter soon!
+
+Use a non-polarized capacitor, eg. ceramic. 
+
+Notes about how capacitors are fixed, but we can use a potentiometer to vary cutoff
+
+How to use LT to simulate AC response 
+
+Open question for students about how they want to trade sensitivity for filter cutoff range
+
+## 2.3 The Oscillator
+The oscillator is the core of any synthesizer, generating periodic signals that we recognize as sound. There are many circuits which produce oscillations, but in general, oscillators can be categorized as either harmonic or relaxation.
+
+| | Harmonic | Relaxation |
+|---|----|----|
+| **Feedback Mechanism:** | Amplification | Switching |
+| **Method:** | Excites oscillations in a resonator (eg. crystal) | Repetitively charges/discharges an energy-storage device to a threshold |
+| **Output:** | Sinusoidal | Non-linear (square / triangle / saw) |
+| **Example:** | ![](res/signal-example-harmonic.png) | ![](res/signal-example-relaxation.png) |
+
+While many synthesizers can output sinusoidal signals, sinusoids lack harmonics and therefore provide limited options for shaping the sound using subtractive filters. Therefore, we will build a relaxation oscillator, which can produce a waveform that is rich in harmonics. 
+
+Sawtooths are frequently preferred for synthesis because they contain both even and odd harmonics, giving additional flexibility when shaping signals through a filter.[^mit_syw] (For a review of waveform harmonics, refer to [Basic Waveforms](#basic-waveforms).) A sawtooth core also provides flexibility for further development down the line, as it can be processed to produce other waveforms such as rectangular and triangle waves. 
+
+A quick Google search will provide many relaxation oscillator designs. We will use a relatively simple sawtooth core design sourced from [Moritz Klein's YouTube channel](https://www.youtube.com/watch?v=QBatvo8bCa4). In order to understand how it works, we need to learn about comparators and hysteresis.
+
+### Comparators
+Comparators can be thought of as a subset of the more general operational amplifier — in fact, comparators are essentially op-amps that are designed to excel in "comparison" applications. 
+
+We know from the Filter section that, for some hypothetical op-amp inputs, we can expect the following outputs:
+
+| $V_+$ | $V_-$ | $A*(V_+ - V_-)$ | $V_{out}$ |
+|-------|-------|---------------|-----------|
+| 5 | 3 | $10^5 * (2)$ | $2*10^5$ |
+| 3 | 5 | $10^5 * (-2)$ | $-2*10^5$ |
+| -5 | 3 | $10^5 * (-8)$ | $-8*10^5$ |
+| 5 | -3 | $10^5 * (8)$ | $8*10^5$ |
+| -5 | -3 | $10^5 * (-2)$ | $-2*10^5$ |
+
 In reality, the op-amp will _try_ to output the necessary voltage, but it is limited by the power supplies (the "rails"). In our case, our circuits run on ±12V, so instead of reaching voltages ~ $10^5$, the opamp in each given case above outputs either a positive or negative 12V. 
 
 | $V_+$ | $V_-$ | $A*(V_+ - V_-)$ | $V_{out}$ |
@@ -405,7 +456,7 @@ In reality, the op-amp will _try_ to output the necessary voltage, but it is lim
 | 5 | -3 | $10^5 * (8)$ | +12V |
 | -5 | -3 | $10^5 * (-2)$ | -12V |
 
-Notice that the output depends solely on the sign of $(V_+ - V_-)$. This setup is called a "comparator" topology, and it is this operation that the comparator excels at: the output is only "HIGH" or "LOW", and depends solely on a comparison of one input vs the other. 
+Notice that the output depends solely on the sign of $(V_+ - V_-)$. This setup is called a "comparator" topology, and it is this mode of operation that the comparator excels: the output is only "HIGH" or "LOW", and depends solely on a comparison of one input vs the other. Whereas op-amps are designed to precisely achieve any value within the power supply rails (eg. 3.532V), comparators are designed for speed — they cannot hit values _between_ the rails, but are adept at switching from low-to-high and back extremely quickly. (Think of this like "input sensitivity" on a computer mouse or in a video game: set the sensitivity low, and you can achieve very precise mouse movements... but good luck turning 180° quickly! On the other hand, with high sensitivity, you can change orientation rapidly, but precise aim will be difficult.) 
 
 Look at the figure below, and check out [this Falstad simulation](https://tinyurl.com/2pw6lrbk) of the comparator topology, to check your intuition about how this works.
 
@@ -413,7 +464,7 @@ Look at the figure below, and check out [this Falstad simulation](https://tinyur
 
 _Different inputs cause the opamp output to hit either rail, depending on_ $(V_+ - V_-)$ _[[Falstad]](https://tinyurl.com/2jkduams)_
 
-(Side-note: Falstad doesn't have a "comparator" part, and in fact, these simulations all use op-amps. However, because a comparator is a subset of operational amplifiers (where the "operation" is comparison), you can sometimes use an op-amp to represent a comparator. In fact, some designers even use op-amp ICs in place of comparators! (As we'll eventually discover, though, this can be bad practice, and if your op-amp is only being used to compare (by swinging to the rails), a comparator is a better choice.)
+(Side-note: Falstad doesn't have a "comparator" part, and in fact, these simulations all use op-amps. However, because a comparator is a subset of operational amplifiers, you can sometimes use an op-amp to represent a comparator. In fact, some designers even use op-amp ICs in place of comparators! (As we'll eventually discover, though, this can be bad practice, and if your op-amp is only being used to compare (by swinging to the rails), a comparator is a better choice.)
 
 #### Comparators With Reference
 While comparator setups could be used to compare any two voltages, typical implementations set one of the inputs as a fixed value, to which the other input is compared. For example, we can check whether a signal is higher than 3V by setting the inverting (-) input to a "trip point" of 3V. This makes $V_- = 3$, such that the output swings "high" to the positive rail when $(V_+ - V_-) = (V_+ - 3) > 0$.
