@@ -268,7 +268,7 @@ As our square wave's input frequency increases, the capacitor begins to "run out
 
 <img src="res/lp-increasing-freq.gif" height=200 />
 
-This demonstrates that the filter allows some frequencies through, but attenuates higher frequencies. Changing the charging time is possible through $R$ and $C$ (via $\tau = RC$), so we adjust which frequencies are noticeably attenuated by adjusting these values. The filter's "cutoff" frequency, where it reduces harmonic content by -3dB to ~70% ($\frac{1}{\sqrt{2}}), is determined by:
+This demonstrates that the filter allows some frequencies through, but attenuates higher frequencies. Changing the charging time is possible through $R$ and $C$ (via $\tau = RC$), so we adjust which frequencies are noticeably attenuated by adjusting these values. The filter's "cutoff" frequency, where it reduces harmonic content by -3dB to ~70% ($\frac{1}{\sqrt{2}}$), is determined by:
 
 $$f_c = \frac{1}{2\pi R C} \text{Hz}$$
 
