@@ -190,9 +190,154 @@ You're ready to listen to signals!
 
 ## 2.2 The Filter
 
-**INCOMPLETE**
+_**Under Construction**_
 
-Given that synthesizer signal flow originates with the oscillator, it might seem that this is the best place to start. For our system design, though, we'll want to start with something simpler which lays the groundwork for more complex subsystems. The filter of a synthesizer represents an excellent starting point. As we build the filter, we will become familiar with electronics fundamentals and engineering design principles which will apply to future subsystem development, and even future system design.
+Given that synthesizer signal flow originates with the oscillator, it might seem that this is the best place to start. For our system design, though, we'll want to start with something simpler which lays the groundwork for more complex subsystems. The filter of a synthesizer represents an excellent starting point. As we build the filter, we will become familiar with electronics fundamentals and principles which will apply to future subsystem development, and even future system design.
+
+With the exception of sine waves, even simple sounds are typically made of many frequencies, called "harmonics", which are combined and perceived as a single sound. Most waveforms produced by synthesizers, such as triangle, square, and sawtooth waves, are rich in harmonic content — alter the harmonics, and the sound will change. (See [sound fundamentals]() to see how this works.)   Our oscillator will produce sawtooth waves, which have both even and odd harmonics.
+
+Many alterations to a signal are possible, including adding harmonics, changing their relative intensities, shifting their frequencies, and more; however, the simplest effect we can apply to a basic waveform is that of _subtractive_ synthesis — removing harmonic content to change a sound. Filtering is one technique to achieve subtractive manipulation, where the signal passes through a "filter" that removes some harmonics while allowing others to pass through. In this module, we will implement two basic filters, a high-pass and low-pass filter, by using a fundamental electrical circuit called an RC filter.
+
+### The RC Low-Pass Filter
+The figure below shows the schematic for an RC high-pass and low-pass filter. Consisting of only a single resistor and capacitor, RC filters are extremely easy to implement. They can be understood farily quicly by developing some intuitions about the behavior of each component. 
+
+<img src="res/filters-rc-lphp-schematic.png" height=300 />
+
+_High pass and low-pass RC filters._
+
+#### Resistors
+Resistors are relatively simple: they _resist_ current flow. According to Ohm's Law, the current through a resistor is proportional to its resistance and the voltage across it. Applying the "water" analogy of electricity, suppose we have current flowing at some specific flow rate. (The exact units for the rate don't matter — 1 gallon/second, 1 liter/second, etc... for electricity, we'd use Amperes, which is Coulombs (a quantity of charge, like gallons or liters) per second. Regardless, current is simply a measurement that says, "How much _stuff_ is rushing through this path per second?") If we make it more difficult for current to flow — for example, by making the pipe half as wide — we can still achieve this flow rate, but we'll have to push harder to get the same quantity of water per second. And if we don't push at all, then regardless of how wide or narrow the pipe is, water doesn't flow. 
+
+This models the relationship between voltage, current, and resistance. Voltage is akin to pressure, causing flow from areas of high pressure to those with lower pressure. As electricity flows, its rate is determined by the difference in pressure and by how much the path resists the flow of electricity. This is neatly captured by Ohm's Law as:
+
+$$V = IR \longleftrightarrow I = \frac{V}{R} \longleftrightarrow R = \frac{V}{I}$$
+
+#### Capacitors
+Capacitors are like tiny battery cells. As the symbol suggests, capacitors store charge on two parallel plates, which allows them to be charged to various voltages as charge is added or removed. Because current always flows "downhill" from higher voltage to lower voltage, charge will continue to accumulate on a capacitor until its voltage is equal to the charge source — a capacitor cannot be charged to a voltage higher than that which it is supplied.^[Technically, this is false — a capacitor can be charged to higher voltages using clever circuitry such as a [charge pump](https://en.wikipedia.org/wiki/Charge_pump) and various power electronics. But we won't be using capacitors in any of these configurations, and this intuition is typically only intentionally violated.] 
+
+Because the accumulation of charged particles is what gives a capacitor voltage, a capacitor cannot instantaneously change its voltage. For example, a capacitor charged to 10V cannot immediately discharge to 0V — all the charges would need to leave the capacitor, and while this _can_ happen very rapidly (~nanoseconds), it still requires some finite amount of time. Additionally, this means that a capacitor cannot change its voltage without a conductive path for charges to travel along. A capacitor that is charged to 10V and removed from a circuit will retain ~10V across its terminals until a conductive pathway exists to remove them. (For this reason, large capacitors are extremely dangerous! Even if a system is disconnected from a power source, large capacitors may store charges that are simply waiting for a conductive path to discharge through.)
+
+#### Low-Pass RC Step Response
+Let's look at how the low-pass filter responds to voltage. 
+
+<img src="res/rc-lp-schematic.png" height=300 />
+
+Before any input voltage is applied, the capacitor has zero charge on it and the input voltage is 0V. Because there is no "pressure" difference at any point in the circuit, charge does not flow in any direction. This represents the typical starting conditions for an RC circuit. 
+
+The figure below shows waveforms plotting input and output voltage levels when we apply a 1V power signal to the circuit. When the input jumps to 1V (pressure increase), the capacitor is still at 0V. (Remember, capacitor voltage cannot change instantly, because its voltage reflects the amount of charge it carries — which takes time to come and go.) This causes a difference in pressure across the resistor, causing a current to flow. As charge flows onto the capacitor, its voltage begins to rise — sharply, at first, and then more slowly, until the capacitor and input voltages are equal.
+
+When we then remove the 1V source, returning the input to 0V, the capacitor is still at 1V (and holding whatever charge corresponds to this voltage). With the pressure differential across the resistor now reversed, charge flows off of the capacitor and drains across the resistor — again, sharply at first, and then more slowly, until the capacitor reaches 0V. This response to a sudden, 1V "jump" in input (called a "step") is called the circuit's "step response".
+
+<img src="res/rc-lp-waveforms.png" height=300 />
+
+The resistor sets the rate of current flow: at extremely large resistances, charging will take a long time because the rate of charge entering the capacitor will be extremely low; by contrast, if there were no resistor, charge could rush from the input to the capacitor, charging it almost immediately! (This still takes time, but it would be almost imperceptibly quick.) With a resistor of $R=1k\Omega$, we can use Ohm's Law to calculate that when the capacitor reads 0V, the current is $I = \frac{1V-0V}{1k\Omega} = 1mA$. Increasing or decreasing the resistor size, we can make the charging/discharging time longer or shorter. 
+
+Ohm's Law also explains why the rate of charge slows as the capacitor voltage nears 1V. While the beginning of the charging cycle has a difference of 1V across the resistor (the input is at 1V, while the capacitor is at 0V), as the capacitor charges, this difference is reduced. After 30ms, for example, the capacitor voltage is closer to 0.8V, establishing a potential difference of only 0.2V! Again, via Ohm's Law, $I = \frac{1V - 0.8V}{1k\Omega} = \frac{0.2V}{1k\Omega} = 0.2mA$. So charging rate naturally decreases as the capacitor voltage gets closer to the input voltage level. Of course, the same is true in reverse for capacitor discharging once the 1V input is removed.
+
+The capacitor also affects the charging time, but instead of controlling the rate of current flow, the capacitor's size determines the voltage level. Capacitance quantifies the relationship between how much voltage a capacitor reads for a given amount of charge, with larger capacitors requiring more charge to reach the same voltage. Therefore, even if the resistor is sized to move charge quickly onto the capacitor, a large capacitor will take longer to read 1V because it has more "space" internally to hold charges. Getting a higher "pressure" involves a high concentration of charges, and with larger plates, we simply need more charges to achieve this same concentration. In equations, this relationship is modelled by:
+
+$$V_C = \frac{Q}{C}$$
+
+where Q = the amount of charge, in Coulombs. Notice that the ratio Q/C demonstrates how higher capacitance requires more charge to reach the same voltage.
+
+Therefore, the capacitor's charging speed depends on the values of both circuit elements: the capacitor's capacitance, and the resistor's resistance. Interestingly, it does _not_ depend on the voltage applied. While it seems like higher input voltages would take more time to be reached, the current will also be higher due to the larger potential difference. As a result, capacitor charging is only dependent on the values of $R$ and $C$. The **time constant** $\tau$ is defined as $\tau=RC$, and as our simulation shows, 5 time constants $(5*\tau)$ is the amount of time required to fully charge or discharge an RC filter's output.
+
+The simulation below shows the low-pass RC step response in full. Open the link to try the simulation on Falstad, and vary the values of R & C using the sliders at the right to see how the step response changes.
+
+<img src="res/rc-lp-falstad.gif" height=300 />
+
+_Visualizing the step response of an RC low-pass filter. [[Click for an interactive Falstad simulation!]](https://tinyurl.com/2mpry67m)_
+
+#### Filtering A Square Wave
+Remember that a square wave is [a sum of odd sinusoid harmonics](https://linsysneuro.wordpress.com/2013/03/13/adding-sine-waves/).
+
+<img src="res/square-sum-of-sines.jpg" height=350 />
+
+_From [Linear Systems for Neuroscientists](https://linsysneuro.wordpress.com/2013/03/13/adding-sine-waves/)_
+
+The "low-pass" filter is so-called because it allows _low_ frequencies to "pass through" to the output, blocking higher frequencies. This effect is demonstrated by passing a square wave through the low-pass filter: its upper harmonics are removed, and as it is reduced to its lowest harmonics, it begins to look more sinusoidal.
+
+<img src="res/lp-sq-to-saw.gif" height=300 />
+
+Square waves show the most obvious signs of filtering, but in general, we can imagine high-frequency content as constituting the "sharp" parts of a signal — hard edges and rapidly-changing voltages. Low-frequency content, by contrast, is smoother and slowly-changing. As more frequencies are filtered, sharp edges are smoothed, becoming more rounded until all frequency content is filtered and the magnitude decreases to 0.
+
+#### Filter Cutoff Frequency
+As our square wave's input frequency increases, the capacitor begins to "run out" of time to charge completely. Before the capacitor can reach equilibrium with the 1V input, the input drops to 0V again and the capacitor discharges. Imagine this process being taken to the extreme: instead of a square wave which pulses at 40-50 Hz, we might have a square wave as high as 5000 Hz. With each cycle taking only $T = \frac{1}{5000Hz}$ seconds, or 20us, the capacitor would barely charge or discharge at all.
+
+<img src="res/lp-increasing-freq.gif" height=200 />
+
+This demonstrates that the filter allows some frequencies through, but attenuates higher frequencies. Changing the charging time is possible through $R$ and $C$ (via $\tau = RC$), so we adjust which frequencies are noticeably attenuated by adjusting these values. The filter's "cutoff" frequency, where it reduces harmonic content by -3dB to ~70% ($\frac{1}{\sqrt{2}}), is determined by:
+
+$$f_c = \frac{1}{2\pi R C} \text{Hz}$$
+
+It's difficult to see this with a square wave because it contains many different frequencies, but switching to a sine wave input (which only has one frequency and no additional harmonics) shows it clearly. For our example circuit, $R$ = 1kΩ and $C$ =  1uF gives $f_c = 1/(2\pi (1k\Omega) (1uF)) = 159 \text{Hz}$. A 1V peak-to-peak (Vpp) sine wave at this frequency is reduced to a voltage range of [146mV, 853mV], or 707mVpp.
+
+<img src="res/lp-707.png" height=300 />
+
+_This low-pass filter has a cutoff frequency of 159Hz, causing an output of 707mVpp. [[Falstad]](https://tinyurl.com/2pe8cph9)_
+
+While we might like this cutoff to be perfect, allowing everything below 159Hz through and blocking everything above, this is impossible. (This is called a "brick-wall" or "ideal" filter.) Our filter is called a "1st-order" filter, meaning that after the -3dB cutoff, signal magnitude drops by -6dB for every doubling in pitch (an octave). This is acceptable for our purposes, although note that higher-order filters are possible and would be an excellent initial upgrade to pursue [once this synth build is complete]().
+
+<img src="res/brickwall-orders.gif" height=300 />
+
+_[[From ElectronicsTutorials]](https://www.electronics-tutorials.ws/filter/filter_8.html)_
+
+
+### The RC High-Pass Filter
+Because of its similarity to the low-pass RC filter, we have most of the intuitions we need to understand the high-pass filter. 
+
+<img src="res/rc-hp-schematic.png" height=300 />
+
+The following output shows the high-pass filter's response to a 1V square wave input. The key to understanding it is making sense of a series-connected capacitor. Recall that a capacitor cannot instantaneously change the voltage across its parallel plates. Therefore, if the voltage on one side of the capacitor changes, the other side of the capacitor must also change by an equal amount. In this way, a capacitor might be thought of as similar to a flexible membrane or a flexible wall — while charges cannot pass _through_ it, any changes in their pressure will be felt on the opposite side. Let's walk through the step response to understand how this behavior creates the step response shown.
+
+Before any input is connected, we assume the capacitor has 0V across it. All nodes in the circuit are at 0V, and nothing interesting is happening.
+
+<img src="res/hp-cap1.png" height=300 />
+
+At the moment we connect 1V at the input, the voltage at the capacitor's input jumps too. Think of this as the capacitor experiencing increased pressure at its input. In order for the capacitor to maintain 0V across it, it must also exert 1V "pressure" on everything to the right of it. This causes the initial "spike" seen at the output. The output voltage is now at higher pressure, establishing a 1V pressure difference across the resistor and causing current flow to ground. 
+
+<img src="res/hp-cap2.png" height=300 />
+
+As current flows from the right-side capacitor plate through the resistor, the output begins to fall according to the RC time constant, until the right side of the capacitor reaches equilibrium at 0V. Importantly, in draining charges to ground, there is now (-1V) established across the capacitor.
+
+<img src="res/hp-cap3.png" height=300 />
+
+Finally, the input drops again to 0V. This drops the capacitor's left-side voltage by 1V, back to 0V. Because the capacitor has (-1V) across its plates, dropping the left side by 1V (from 1V to 0V) must also drop the right side by 1V (from 0V to -1V). Without the 1V "pressure" flexing the capacitor wall toward the right, a vacuum of (-1V) appears at the output. This causes the second, negative "spike" seen at the output, and a (-1V) differential across the resistor to ground. 
+
+<img src="res/hp-cap4.png" height=300 />
+
+With a -1V voltage established, current begins to flow _up_ the resistor (from higher 0V pressure to lower -1V pressure) onto the capacitor's right plate. As charges accumulate, the right side of the capacitor rises according to the RC curve, until it returns to 0V.
+
+<img src="res/hp-cap5.png" height=300 />
+
+
+#### High-Pass Output
+A high-pass filter's output typically looks sharper and more "jagged" than the original signal, as it allows only the highest frequency content through to the output. Applying this filter to a square wave, we get output that has more high-frequency characteristics as we increase the resistance. 
+
+<img src="res/hp-more-hp.gif" height=250 />
+
+_Removing low-frequency content from a square wave with a high-pass filter. [[Falstad]](https://tinyurl.com/2gxr8ofk)_
+
+Interestingly, [simulation shows](https://tinyurl.com/2e9pytyv) that the cutoff point (the frequency at which -3dB, or 70.7% amplitude occurs) for a high-pass filter has the same formula as a low-pass filter:
+
+$$f_c = \frac{1}{2\pi R C} \text{Hz}$$
+
+As a first-order filter, it also obeys the same attenuation factor, however in the opposite direction: +6db/octave. The only difference is the positive slope, which flips the direction that the filter attenuates frequencies from the cutoff point.
+
+<img src="res/hp-bode.jpg" height=300 />
+
+### Build Notes From The Filter
+
+_**Under construction**_
+
+BB layout from Schematic 
+Leave room for the HP filter soon!
+
+Use a non-polarized capacitor, eg. ceramic. 
+
+Notes about how capacitors are fixed, but we can use a potentiometer to vary cutoff
+
+Open question for students about how they want to trade sensitivity for filter cutoff range
 
 ## 2.3 The Oscillator
 The oscillator is the core of any synthesizer, generating periodic signals that we recognize as sound. There are many circuits which produce oscillations, but in general, oscillators can be categorized as either harmonic or relaxation.
