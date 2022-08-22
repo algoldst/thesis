@@ -1429,7 +1429,7 @@ Recognizing that the gate signal is a logical condition (either it is ON or it i
 
 <img src="res/AR-basic-env.png" height=400 />
 
-_The most basic AR envelope generator. [[Falstad]](https://tinyurl.com/2eejx6af)_
+_The most basic AR envelope generator. [[Falstad]](https://tinyurl.com/2hbvkx6p)_
 
 The comparator output (which we can call the true "gate" signal) swings between [0V, 12V], feeding the RC network with a 12Vpp square wave and resulting in a simple AR envelope. Assigning a slider to the resistor value simulates a potentiometer that allows the attack and release value to be set. You can experiment with the potentiometer range: use the oscilloscope output to find a range of attack/release that feels "good" to you. (Be sure to read the note below about scaling simulation times.)
 
