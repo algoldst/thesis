@@ -32,41 +32,199 @@ The filter consists of a simple high- and low-pass stage, controllable via poten
 
   
 # 1.0 Fundamentals
-
-## Electronics
-- Simulation & Breadboarding
-	- Simulations are not perfect. Falstad < SPICE < Reality
-	- Breadboards are not perfect
-- Ohm's Law: V=IR. Definitions & relationships
-- Voltage dividers
-- AC vs DC
-- Reactive Components (X, Z), Energy Storage, Frequency Dependence
-	- RC Time Constants
-	- Resonance / Tank Circuits
-- Diodes
-
-### Op-Amps
-
-If we manipulate the feedback before its arrival at the inverting terminal, we can modify the values that the op-amp sees. For example, we could cut the feedback values in half via a voltage divider. 
-
-Imagine applying 5V to the input of the following circuit. If the output starts at 0V, the op-amp will compare $(V_+ - V_-) = 5 - 0$ and push current out in order to bring the output positive. In the buffer setup, the comparison $(V_+ - V_-) = 0$ is achieved when the output reaches 5V; however, with the voltage divider, an output of 5V will only cause 2.5V at the input! The output will continue to increase until it reads 5V at the inverting input, or 10V at the output. The "doubling" behavior holds for all practical inputs to this op-amp configuration, and more generally, an op-amp in this configuration is called a "non-inverting" op-amp. The formula for this is:
-
-$$V_{out} = V_{in+} (1 + \frac{R_f}{R_{g}})$$
-
-Notice that if we make $R_f = 0$ or $R_g = \infty$, the formula (and circuit) becomes the same as a buffer, following $V_{out} = V_{in+}$. 
-
-
-<img src="res/non-inverting-2x.png" height=250 />
-
-
-## Basic Waveforms
-- Square / Saw / Tri / Sine
-- Harmonics
+A disclaimer: Don't treat this like a reference manual. This is a guide to get you to a goal. Everything in this text aims to be true, but in pursuit of the goal, we will embrace approximations, occasional half-truths, and plenty of omissions, whereas a reference source (such as a textbook) might not. Use it as a tool in pursuit of the goal — as a supplement for your education — and it will serve you well.  
 
 ## Sound & Audio Fundamentals
-- Pitch as oscillation, frequency & period
-- Timbre
-- Range of human hearing
+What we perceive as "sound" is really a propogating compression (longitudinal) wave, traveling through a medium and causing alterations in pressure and displacement of air particles. Areas of high pressure undergo compression, while low pressure areas undergo rarefaction. 
+
+ Sound waves are not visible, but we can represent areas of compression and rarefaction with transverse waves. Compressions correspond to "peaks", and rarefactions correspond to "troughs".
+
+<img src="res/longitudinal-wave.jpg" height=300 />
+
+_Pressure waves (top) can be visualized as transverse waves (bottom). [[Source]](https://www.sciencelearn.org.nz/resources/2816-sound-wave-interference)_
+
+This turns out to be a natural way to represent audio. When a microphone records sound, pressure differences move a transducer back and forth, and the resulting oscillations are recorded as a transverse wave. Signal playback through a speaker follows this process in reverse: providing the speaker with oscillating high- and low- voltages causes the speaker diaphragm to move back and forth, pushing air and re-creating the compression waves of the original sound.
+
+What we think of as "sound" may consist of one or multiple layered sounds, but typically features a recognizable pitch. The pitch is determined by the number of oscillations per second, called the **frequency** $(f)$, and is measured in Hertz (abbreviated Hz).
+
+$$f = \frac{\text{# oscillations}}{\text{second}}$$
+
+We can also represent pitch by the **period** $(T)$, which is the amount of time to complete one oscillation.
+
+$$T = \frac{1}{f} \leftrightarrow f = \frac{1}{T}$$
+
+The range of human hearing spans [20Hz - 20kHz](https://www.ncbi.nlm.nih.gov/books/NBK10924/#:~:text=Humans%20can%20detect%20sounds%20in,to%2015%E2%80%9317%20kHz.)), corresponding to an oscillation period between 50μs - 50ms long. For reference, the human voice spans ~ 80Hz - 300Hz.
+
+## Basic Waveforms
+The simplest sonic waveform is a sinusoid: a pure oscillation at a single frequency. As atoms are to matter, sinusoids are the most basic building block with which all other sounds can be created. Layered sinusoids are typically perceived as a single sound, albeit much more complex, and conversely, every sound can be represented as a summation of individual sinusoids, including common waveforms such as squares, triangles, and sawtooths. 
+
+<img src="res/sine.png" height=100 />
+
+This surprising fact is the product of an entire mathematical field called [Fourier analysis](https://musicandcomputersbook.com/chapter3/03_03.php), but to gain a quick intuition, we can examine a square wave.
+
+<img src="res/square.png" height=100 />
+
+Although sounds might be dominated by a single frequency, called the _fundamental_, they can contain [many different pitches](https://youtu.be/i_0DXxNeaQ0), called _harmonics_. Harmonics occur at integer multiples of the fundamental: for example, a sound which is perceived as 300Hz may have harmonics at 600Hz, 900Hz, 1200Hz, and so on. (The fundamental is the _1st_ harmonic!) The relative intensity of harmonics gives sounds their recognizable qualities, called _timbre_, which is what allows sound to be identified as a flute versus a violin. 
+
+Square waves sound "metallic" and "buzzy", like the retro arcade music of Tetris. This is because they contain many higher frequencies: ideal square waves are comprised of an infinite number of odd harmonics, in amplitudes which decrease by $A_n = \frac{1}{\text{n [harmonic \#]}}$. 
+
+<img src="res/square-sum-of-sines.jpg" height=400 />
+
+_Square waves can be decomposed into an infinite sum of sinusoids. [[Source]](https://linsysneuro.wordpress.com/2013/03/13/adding-sine-waves/)_
+
+Similarly, every other basic waveform used in synthesis is made up of harmonics with varying amplitudes. If we plot the harmonics, with harmonic numbers on the _x_-axis and amplitudes on the _y_-axis, we get a _frequency spectrum_ plot showing their _spectral content_. 
+
+<img src="res/waveform-spectrals.jpeg" height=300 />
+
+_Frequency spectra for common waveforms. [[Source]](http://musicandcomputersbook.com/chapter3/03_03.php)_
+
+As mentioned earlier, sinusoids have only one harmonic (the fundamental). While square waves have odd harmonics at amplitudes $1/n$, sawtooth and traingle waves contain both even and odd harmonics. (The plot above reflects that sawtooths have harmonic amplitudes of $1/n$, while triangles have amplitudes following $1/n^2$.) 
+
+
+
+## Electronics
+
+Electronics is the discipline using movement of charge to achieve engineering goals by use of circuits (any closed loop of conductors through which current can flow).[^merberich] Electricity is the presence and movement of charge through conductive paths. 
+
+### Electricity Fundamentals
+We use several terms to quantify this movement of charge:
+
+**Charge** is denoted by the letter $Q$. 
+
+- SI unit: Coulomb [C]
+- 1 Coulomb = amount of charge on $6.2*10^{18}$ electrons.
+
+**Voltage** is the amount of energy needed to move charge between two points.
+
+- SI unit: Volt [V] = [J/C]
+- Typical values: DIY synthesizer designs typically use +12V and -12V for power. Signals range between 0 - 5V.
+- Analogies: Water pressure, elevation, imagine trying to zipline from point A → B. What points are higher/lower? If there is a path connecting two points, charge will always move from high → low.
+	- In particular, the "pressure" analogy is so convenient that we'll frequently discuss voltage as a difference in pressure. Keep in mind that this analogy is not litearlly true; voltage is a difference of _energy_, so it is more technically correct to discuss differences in _potential_. Thinking about pressure differences is, however, often more intuitive.
+
+**Current** describes the flow rate of charge through a component. Denoted by letter $I$.
+
+- SI unit: Amperes (Amps) [A] = [C/s]
+- Typical values: Microamp (μA) to milliamp (mA) range. Integer amperes typically set components on fire and destroy your circuits.
+- Analogies: Rate of flow. Imagine looking at a water pipe and describe how quickly the water moves: Gallons-per-minute? Liters-per-second? Replace the volume of water with "volume of charge", and Amps tell you, "How much charge moves through this point per second?"
+
+**Resistance** measures how difficult it is to push charges through a particular path. 
+
+- SI unit: Ohms [Ω] = [V/A]
+- Typical values: Large range, easily spanning 10Ω - 1 Megaohm (MΩ). Common resistor values between 1kΩ - 10kΩ.
+- Analogies: Pipe width (water), friction. Narrow pipes are more difficult to push water through. Higher friction makes you go slower. This can be overcome with higher pressure, more elevation, etc. In general, higher resistance makes flow (of anything) more difficult.
+
+### Circuit Elements
+Elements in circuits are divided into two categories: passive elements and active elements. Active elements can add electrical energy to a system, control the flow of charge, or amplify power. Passive elements can only dissipate, absorb, or store electrical energy.
+
+To introduce the most common passive elements:
+
+**Resistors** are circuit elements that dissipate energy as heat. They resist the flow of current: without resistors, electricity would flow from high to low voltage in nanoseconds, but resistors can limit current to a near-standstill.
+
+**Capacitors** are made up of two parallel plates which accumulate charges to store energy as voltage across the capacitor's terminals. _Capacitance_ [F, Farads] quantifies the voltage $V_C$ that results from a quantity of charge $Q$, according to the relationship $V_C = Q/C$ [Coulomb/Farad]. Typical values are in the pico- to micro-Farad range.
+
+**Inductors** are loops of wire that store electrical energy in a magnetic field. Their _inductance_ is measured in units of Henries [H]. Inductors are not used in this synth design.
+
+<img src="res/passives.png" height=300 />
+
+We will introduce active elements as we progress, but there are some basics which are assumed and not introduced (much):
+
+**Diodes** allow current to flow in a single direction, and oppose current flow in the opposite direction. When conducting at their rated current, diodes have a forward voltage drop across their terminals, typically ~ 0.7V; however, this voltage decreases as current slows. Diodes are useful for creating one-way paths to guide current. 
+
+<img src="res/diode.png" height=250 />
+
+**Integrated circuits** (ICs) describe a general class of small devices which contain complex circuits within. Common ICs are operational amplifiers (op-amps), comparators, voltage regulators, and many other components. We will introduce all of these as we go.
+
+<img src="res/ics.png" height=250 />
+
+### Schematics, Simulation, Build, and Test
+Electrical circuits are documented in diagrams known as _schematics_,  which use common symbols for different types of circuit elements. Lines indicate wire connections between elements. Unless otherwise stated, wires are assumed to have 0 resistance, and therefore all points connected by wires (called _nodes_) share the same voltage. Elements which are connected end-to-end share a single node in common and are called _series_-connected, while elements which share two nodes are called _parallel_-connected. (Two parallel components are often denoted in shorthand with "//", eg. R1 // R2.)
+
+<img src="res/series-vs-parallel.png" height=300 />
+
+Electricity is provided via **sources**, which are usually controllable and output either voltage or current. Nodes in the circuit which are explicitly 0V are considered "grounded" and are denoted by the GND symbol.
+
+<img src="res/active-sources-and-gnd.png" height=300 />
+
+Most schematic design is done via programs such as Altium, Autodesk EAGLE, or KiCad. Circuit simulation is typically done with a SPICE program. There are many, but we will be using [LTSpice](https://www.analog.com/en/design-center/design-tools-and-calculators/ltspice-simulator.html) and [Falstad](https://www.falstad.com/circuit/) simulator, which are both free. 
+
+Schematics do not indicate physical orientation or placement of parts in 3D space. Translating schematics to a physical design is referred to as _layout_. Manufacturing printed circuit boards (PCBs) require formal layout in programs that support physical design, but such tools are not strictly necessary in order to implement a circuit. Instead, electronic "breadboards" allow for rapid prototyping by providing a convenient structure to connect circuit elements together. Breadboards are not without drawbacks; in particular, breadboarding a circuit introduces electrical non-idealities that can alter the circuit's behavior; however, they are a powerful tool to design and learn with, and will form the basis of this project's synthesizer implementation.
+
+<img src="res/breadboards.jpg" height=450 />
+
+Because it is not possible to observe electrons as they flow through a circuit, we need tools to verify our breadboard circuit implementations throughout the build process. This can be done via tools which measure voltage (oscilloscopes, voltmeters), current (ammeters), and resistance (ohmmeters). A basic digital multimeter (DMM) can provide this functionality and more. (See the [Bill-of-Materials]() for a recommendation.) Generally speaking, measurement tools act in an ideal fashion to avoid altering a circuit's function. Certain simulation software, such as Falstad, mimics these tools to provide additional information during simulation.
+
+### Series and Parallel Connections
+Similar circuit components arranged in series and parallel combine by adding or scaling, depending on the component. Resistors and inductors add in series and scale in parallel, whereas capacitors combine in an opposite way, adding in parallel and scaling in series. 
+
+Scaling of $n$ components follows a formula $X_{total} = (1/X_1 + 1/X_2 + ... + 1/X_n)^{-1}$. When only two elements are involved, this formula reduces to $X_{total} = \frac{X_1 X_2}{X_1 + X_2}$. The following figure shows analytically-equivalent circuit element configurations.
+
+<img src="res/series-parallel-reduction.png" height=400 />
+
+_The three resistor networks are equivalent, as are the three capacitor networks._
+
+Applying series and parallel combinations, we have the following relationships:
+
+$$R_4 = R_2 + R_3 \implies R_{total} = \frac{R_1 R_4}{R_1 + R_4}$$
+
+$$C_4 = \frac{C_2 C_3}{C_2 + C_3} \implies C_{total} = C_1 + C_4$$
+
+These relationships result in important characteristic resistive network behavior that can be understood from an intuitive perspective. (Mathematical proof relies on Ohm's Law, covered in the next section.)
+
+1. Resistors in parallel allow more current. Just as traffic splits when given multiple roads, current splits to flow proportionally across parallel-connected resistors.
+2. Resistors in series cause less current flow, electrically equivalent to a larger resistor.
+
+### Ohm's Law
+Voltage establishes pressure differences which push current along conductive paths. Paths with higher resistance (eg. narrower, higher friction) yield slower flow rates. Higher current can be achieved by decreasing path resistance, or by increasing the pressure difference (eg. pushing harder, raising the elevation of point A or lowering the elevation of point B).
+
+Voltage, current, and resistance are linearly-related quantities which summarize these relationships, and are formalized as Ohm's Law:
+
+$$\Delta V = IR \leftrightarrow I = \frac{\Delta V}{R} \leftrightarrow R = \frac{\Delta V}{I}$$
+
+Because voltages are typically discussed in reference to 0V (GND), the $\Delta$ is typically omitted and the formula is often written as $V = IR$, but keep in mind voltage is a _relative_ quantity relating a _difference_ in electrical "pressure" between two points.
+
+This relationship is demonstrated by the simplest schematic, consisting of a single voltage source, resistor, and GND. For a voltage source of V = 5V and R = 1kΩ, Ohm's Law tells us 
+
+$$I = \frac{5V - 0V}{1k\Omega} = 5mA$$
+
+<img src="res/ohms-law-schematic.png" height=300 />
+
+_Ohm's Law predicts that a 5V potential difference across 1kΩ of resistance causes current of 5mA. [[Falstad]](https://tinyurl.com/2nh7dml7)_
+
+Applying Ohm's Law further reveals that current s
+
+### Voltage Dividers
+Intuitively, we understand that moving from high to low elevation requires passing through all elevations in-between. (You can't move from 100m to 0m above ground without passing through 50m at some point!) Applying voltage across series-connected resistors works similarly, with an intermediate voltage established at the common connecting node. This is the concept behind _voltage division_.
+
+<img src="res/voltage-divider.png" height=400 />
+
+_Two resistors form a voltage divider at their shared node._
+
+This works because series-connected resistors are electrically equivalent to a single, larger resistor of value $R_{tot} = R_1 + R_2$. This sets current across _both_ resistors as 
+
+$$I = \frac{V}{R_1 + R_2}$$
+
+The voltage at the output is equivalent to the voltage across $R_2$, yielding
+
+$$V_{out} = V_{R1} = I R_2$$
+
+$$V_{out} = \frac{V}{R_1 + R_2} R_2$$
+
+The voltage output is determined by the ratio of resistors, which scale the input voltage applied. We can verify our understanding with a simulation. (Open the simulation to experiment with different resistor values.)
+
+<img src="res/voltage-divider-falstad.png" height=400 />
+
+_A voltage divider gives output proportional to the ratio of two voltages. [[Falstad]](https://tinyurl.com/2nypzrrl)_
+
+
+### DC & AC
+So far, we've been discussing electricity in constant-voltage, constant-current circuits. The circuit conducts electricity, but nothing changes from moment to moment. Constant current (often produced by constant voltage) is referred to as _Direct Current_, or DC. If we allow our electrical sources to vary over time, this is called _Alternating Current_, or AC. 
+
+Power sources are usually DC, set to constant values such as ±12V to supply circuits. Signals such as audio waves are typically represented as AC, oscillating periodically with time. Just like sound waves, AC waves have a waveform (sine, square, saw), frequency (in Hertz), period (in seconds), and amplitude (Volts or Amps). 
+
+(Don't be fooled by the name "Alternating Current"! Voltages, as well as currents, can be AC or DC. After all, voltage is caused by current across some resistance — if the current changes, so will the voltage.)
+
+
+
 
 
 # 2.0 The Synthesizer
@@ -183,8 +341,6 @@ You're ready to listen to signals!
 
 
 ## 2.2 The Filter
-
-_**Under Construction**_
 
 Given that synthesizer signal flow originates with the oscillator, it might seem that this is the best place to start. For our system design, though, we'll want to start with something simpler which lays the groundwork for more complex subsystems. The filter of a synthesizer represents an excellent starting point. As we build the filter, we will become familiar with electronics fundamentals and principles which will apply to future subsystem development, and even future system design.
 
@@ -482,7 +638,7 @@ _Setting the reference to 3V via voltage dividers [[Falstad]](https://tinyurl.co
 #### Hysteretic Comparators
 What if we wanted more than one trip point? That is, what if we wanted the comparator output to swing "high" at one voltage, but swing "low" at a different voltage? This is known as "hysteresis", and will take some setup conceptually; however, physically it is simple to achieve. Importantly, this is the key to creating a relaxation oscillator!
 
-First, we need to develop our intuition about what a voltage divider does. Imagine a voltage divider as "dividing" the voltage between two points. Typically, this is a fixed voltage rail, such as our 12V VCC, and GND; the output exists between the two resistors and depends on their ratio. However, what if we moved this second side, so that it wasn't connected to GND? In that case, the output would still be set "between" the two resistors, but with the endpoints shifted. You can see this principle demonstrated in the three voltage dividers below, where (due to the equal resistances) the output voltage is always halfway between the endpoints.
+First, we need to develop our intuition about what a [voltage divider]() does. Imagine a voltage divider as "dividing" the voltage between two points. Typically, this is a fixed voltage rail, such as our 12V VCC, and GND; the output exists between the two resistors and depends on their ratio. However, what if we moved this second side, so that it wasn't connected to GND? In that case, the output would still be set "between" the two resistors, but with the endpoints shifted. You can see this principle demonstrated in the three voltage dividers below, where (due to the equal resistances) the output voltage is always halfway between the endpoints.
 
 <img src="res/voltage-div-shifting.png" height=300/>
 
@@ -617,7 +773,6 @@ Spiked capacitor: https://tinyurl.com/24br28bv
 
 
 ### Adding Voltage Control
-_**Under construction**_
 
 We want the ability to produce sound at a variable frequency. While the term "variable" implies that something is changing, it's not obvious what that ought to be. Right now, we can change the frequency of the sawtooth core by modifying the resistance via a potentiometer, but luckily, this isn't our only option. Resistive control is somewhat limiting — after all, a potentiometer requires mechanical input, turning a knob or a screw with your fingers. Depending on the implementation, it would be extremely difficult, if not impossible, to rapidly change the pitch as you might with an instrument (eg. from 100Hz to 1kHz). Further, we might want to connect the oscillator to a keyboard or microcontroller, tuning it indirectly rather than with our hands. 
 
@@ -766,11 +921,14 @@ We're looking to scale one of our inputs (the 0-5V CV input) and offset it with 
 
  If we change the resistor ratios, we have a formula that provides the weighted average of two inputs, $V_1$ and $V_2$. 
 
+### Temperature Compensation
+
+### Oscillator Build Notes
+
 ## 2.4 The Amplifier
 A synthesizer's amplifier directly controls the volume of the signal output. We could do this in many ways, and the most basic might be a simple voltage divider. However, we want the ability to control the volume in both directions: quieter, but also louder. This isn't possible using solely passive components like resistors and capacitors, because we need to add additional power to the circuit. Recall that our goal is to use CV to control the amplifier, meaning that the final subsystem design will turn 0-5V into a continuous range of volume levels.
 
 We've used operational amplifiers to buffer (create a copy of) signals, and they can also be used for amplification. Constant amplification is easy with op-amps, and we'll see how to do this toward the end of the amplifier build. First, though, we need to implement adjustable gain, which is a job for transistors. 
-
 
 ### The Most Basic CE Amplifier
 Imagine we have a BJT where $V_b = 0.6V$ gives 1mA of current through the device. (Note: This is achieved by setting $I_s$ = 84.28fA in the model. We're doing this for easy numbers and demonstration purposes, so do not use these numbers as truth! For the same reason, we'll be using 10V supply rails for now — we'll switch back to 12V when we build.)
@@ -1216,7 +1374,7 @@ _An amplifier simulation (using adjusted SPICE model!). The differential amplifi
 
 Remember that we've been using transistors with edited SPICE models for mathematical simplicity. Be sure to use normal SPICE models when choosing values for your amplifier design, or see the [Build Notes] section for an implementation.
 
-### Build Notes
+### Amplifier Build Notes
 
 _**Under Construction**_
 Make the tail resistor big and use large sink voltage range to get a better current source. Think about how the vbe changes in millivolts; the larger the sink voltage magnitude, the less a millivolt change will affect current.
@@ -1227,8 +1385,93 @@ Install a trimmer in the inverting op-amp so that you can adjust the max gain of
 
 Include implementation in Falstad of actual amp, using un-adjusted SPICE models.
 
-## 2.5 The Envelope Generator
 
+
+## 2.5 The Envelope Generator
+_**Under construction**_
+
+Our oscillator outputs a continuous, variable-frequency tone, but this isn't how most instruments sound. When musicians plays a note, the sound doesn't remain constant, but changes over time: the musician may increase the volume at the beginning, or adjust the volume mid-note; it may start suddenly, or gradually build up; and the musician can end the note abruptly or slowly fade out. Interestingly, the note maintains its pitch throughout this process (if the musician is any good), meaning the frequency is fixed while the _amplitude_ changes. 
+
+We've been controlling our amplifier gain via an adjustable power supply, but we could allow another source to provide the volume level. This is the idea behind _amplitude modulation_, in which a signal (like our sustained oscillator output) is _modulated_ in amplitude by another signal. If we imagine turning the volume up and down every second while generating a constant 20Hz sine wave, amplitude modulation looks like this:
+
+<img src="res/amplitude-envelope-matlab.png" height=600 />
+
+The modulating 1Hz signal in the figure above is called an **envelope** because its level constrains the amplitude of the original 20Hz signal within itself. If the envelope remains constant at 0V, for example, then the output signal will be 0V, even if the original audio signal oscillates wildly. An envelope _generator_, then, is simply a circuit which produces an envelope to modulate other circuits. Using an envelope generator to control our synth's amplifier gain will allow us to automatically vary the volume, without manually adjusting a power-supply voltage ourselves. This is the key to creating a more musical sound. 
+
+Envelope generators can run continuously, like an oscillator, or they can be _triggered_ by an external signal, called a **gate**, to play. The envelope continues while the gate has a high voltage (eg. 5V), and ceases its output when the gate goes low (0V). You might imagine a gate corresponding to pressing a key on a piano: the note plays while you hold the key, and stops when you let go. If no note is pressed, the envelope generator does not output an envelope. Depending on the implementation, envelope generators may repeatedly generate an envelope, or only "fire" once when the gate first triggers. Following most instrument behavior, we will implement a "one-shot" which triggers once per gate event.
+
+Envelopes come with different shaping options, but typically allow users to control 4 parameters: _attack_, _decay_, _sustain_, and _release_, or **ADSR**. Three of these parameters (attack, decay, release) are time-based, while one (sustain) is amplitude-based, giving the user control over the overall envelope shape. 
+
+**Attack** sets how quickly the amplitude of the envelope reaches its peak. A "fast" (short) attack causes volume to rise abruptly, while a "slow" (long) attack causes a gradual swell. 
+
+**Decay** sets how quickly the amplitude reduces (decays) to a secondary level after it peaks. Fast decay times cause sharp "staccatto" envelopes.
+
+**Sustain** sets the _level_ that the envelope reduces to, after it hits its initial peak. If sustain is set to 100%, then no amplitude reduction occurs, rendering the decay parameter ineffective. If sustain is set to 0%, then the amplitude reduction is complete. Sustain is typically set to some value in the middle of this range. The envelope maintains the sustain level for the rest of the time that the gate remains high. 
+
+**Release** determines how quickly the envelope signal returns to 0V once the gate is released. Fast releases cause an abrupt end, while slow releases gradually fade out.
+
+<img src="res/adsr.png" height=400 />
+
+_ADSR: Attack, Decay, Sustain, and Release. ADR control time, while S controls amplitude. [[Source]](http://www.audiomulch.com/blog/southpole-expedition-part-3-pattern-sequenced-adsr-envelopes)_
+
+### A Basic AR Envelope
+At its most basic, an attack/release envelope generator should accept CV input which triggers a gate when it goes high (5V). The output signal should rise at a defined rate, hold for the duration of the gate, and fall at a defined rate when the gate returns low.
+
+We've already seen an envelope generator that fulfills these requirements: the low-pass RC filter! 
+
+<img src="rc-lp-waveforms.png" height=300 />
+
+_The RC low-pass step response forms a basic AR envelope._
+
+A low-pass filter has the right shape for an envelope generator, although we don't want to connect another circuit's output directly to the filter. As a general rule, we want to isolate our circuits so that they don't affect other circuits which interact with them. While this _does_ sound like the job for an op-amp buffer (recall: high input impedance), there's another problem: what if the previous circuit has output other than 5V, such as a negative voltage, or 4V (or 6V?) instead of 5V? We want to build our circuits so that they are not reliant on other, external circuits being perfect. Blindly accepting external input is a guaranteed invitation for unexpected input to give us undesirable circuit behavior. 
+
+Recognizing that the gate signal is a logical condition (either it is ON or it is OFF), we can feed the input into a comparator with a fixed reference. Similar to an op-amp, a comparator will have high input impedance, isolating our circuit, but it also guarantees only two possible outputs: HIGH or LOW. This is much easier to design around because it minimizes reliance on external factors — either the input CV is above a certain threshold, or it isn't. The comparator then feeds an RC network to create our first gate-triggered AR envelope generator.
+
+<img src="res/ar-basic-env.png" height=400 />
+
+_The most basic AR envelope generator. [[Falstad]](https://tinyurl.com/2eejx6af)_
+
+The comparator output (which we can call the true "gate" signal) swings between [0V, 12V], feeding the RC network with a 12Vpp square wave and resulting in a simple AR envelope. Assigning a slider to the resistor value simulates a potentiometer that allows the attack and release value to be set. You can experiment with the potentiometer range: use the oscilloscope output to find a range of attack/release that feels "good" to you. (Be sure to read the note below about scaling simulation times.)
+
+> **Scaling Simulation Time**
+>
+> Because we are designing circuitry that operates on a timescale of seconds, you might be tempted to set your simulation's square wave input to a low frequency (eg. 0.2 - 0.5 Hz). While software such as LTSpice can easily accomodate any timescale you use, Falstad has limits on its time resolution. Additionally, even with a powerful computer and running at maximum simulation speed, your browser will likely simulate fractions of a second in real time. To get around this, we'll work in "scaled" time (0.01x), treating every 1ms of simulation time as 100ms in the real world. Divide all frequencies by 100; multiply all periods by 100; if you want an envelope that takes 2 seconds to rise and 2 seconds to fall, set your time constant so that the attack takes 0.02 seconds, and when you assmble the breadboard, multiply your R or C by 100. 
+
+Up until now, we've powered our ICs with ±12V, but this is not required. Op-amps and comparators can only output as high or low as their supply rails, so by connecting the comparators to 0V instead of -12V, they will output within that range. (Also, depending on your comparator ICs, a 24V power supply might fry the chips. In 2022, at least, it is easier to find comparators that accept 12V than 24V.) Note that, by default, Falstad uses ±15V as the supply rails for op-amps. This hasn't been an issue before because our components have not used the full output range; however, in this design, our devices will regularly output rail voltages. If you want to use your design on ±12V, make sure to design for this by editing the output range of all op-amps you place into the simulation. Double-click on each op-amp, and set the "Max" and "Min" output voltage for the component to match the rails you will use. Do this for **every** op-amp you place! (Falstad will not do this automatically.)
+
+Also keep in mind that we shouldn't require the input CV to be perfectly 0V or 5V — after all, the incoming circuit output might not reach these values exactly. We can set the reference threshold somewhere in-between, high enough to not trigger accidentally, but low enough that the CV should easily pass it. Where that threshold is exactly depends on the circuit designer's comfortability and instincts. As an example, the simulation below assumes a CV input alternating between [0V, 2V], and accomodates this via a threshold just above 1V. 
+
+> This subsystem is the least rigid in terms of design, meaning it affords you (the designer) with a lot of freedom. We've been designing and implementing lots of complex circuitry, so for this subsystem, you'll have the opportunity to set a lot of the values yourself, according to your intuitions. Of course, you can always go with the values in the schematics here, but engineering is full of trade-offs. If you feel comfortable, experiment to discover what other values you might prefer.
+
+### Separating Attack and Release
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+### Op-Amps
+
+If we manipulate the feedback before its arrival at the inverting terminal, we can modify the values that the op-amp sees. For example, we could cut the feedback values in half via a voltage divider. 
+
+Imagine applying 5V to the input of the following circuit. If the output starts at 0V, the op-amp will compare $(V_+ - V_-) = 5 - 0$ and push current out in order to bring the output positive. In the buffer setup, the comparison $(V_+ - V_-) = 0$ is achieved when the output reaches 5V; however, with the voltage divider, an output of 5V will only cause 2.5V at the input! The output will continue to increase until it reads 5V at the inverting input, or 10V at the output. The "doubling" behavior holds for all practical inputs to this op-amp configuration, and more generally, an op-amp in this configuration is called a "non-inverting" op-amp. The formula for this is:
+
+$$V_{out} = V_{in+} (1 + \frac{R_f}{R_{g}})$$
+
+Notice that if we make $R_f = 0$ or $R_g = \infty$, the formula (and circuit) becomes the same as a buffer, following $V_{out} = V_{in+}$. 
+
+
+<img src="res/non-inverting-2x.png" height=250 />
 
 ## 3.0 Future Work
 ### Additional Oscillators & Noise
@@ -1241,3 +1484,4 @@ Include implementation in Falstad of actual amp, using un-adjusted SPICE models.
 [^pc_eurorack]:Perfect Circuit Eurorack https://www.perfectcircuit.com/signal/eurorack-line-level
 [^nate]: Nate Hatch Fender Component Selection https://www.youtube.com/watch?v=FacBtCPez2U&t=7s
 [^pcheung]: Pcheung's Aero notes
+[^merberich]: Michael Erberich's AES Microcontroller Workshop https://merberich.github.io/aes_microcontroller_workshop/#electronics-fundamentals
