@@ -1419,7 +1419,7 @@ At its most basic, an attack/release envelope generator should accept CV input w
 
 We've already seen an envelope generator that fulfills these requirements: the low-pass RC filter! 
 
-<img src="rc-lp-waveforms.png" height=300 />
+<img src="res/rc-lp-waveforms.png" height=300 />
 
 _The RC low-pass step response forms a basic AR envelope._
 
@@ -1427,7 +1427,7 @@ A low-pass filter has the right shape for an envelope generator, although we don
 
 Recognizing that the gate signal is a logical condition (either it is ON or it is OFF), we can feed the input into a comparator with a fixed reference. Similar to an op-amp, a comparator will have high input impedance, isolating our circuit, but it also guarantees only two possible outputs: HIGH or LOW. This is much easier to design around because it minimizes reliance on external factors — either the input CV is above a certain threshold, or it isn't. The comparator then feeds an RC network to create our first gate-triggered AR envelope generator.
 
-<img src="res/ar-basic-env.png" height=400 />
+<img src="res/AR-basic-env.png" height=400 />
 
 _The most basic AR envelope generator. [[Falstad]](https://tinyurl.com/2eejx6af)_
 
