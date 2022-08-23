@@ -1431,7 +1431,7 @@ Recognizing that the gate signal is a logical condition (either it is ON or it i
 
 _The most basic AR envelope generator. [[Falstad]](https://tinyurl.com/2hbvkx6p)_
 
-The comparator output (which we can call the true "gate" signal) swings between [0V, 12V], feeding the RC network with a 12Vpp square wave and resulting in a simple AR envelope. Assigning a slider to the resistor value simulates a potentiometer that allows the attack and release value to be set. You can experiment with the potentiometer range: use the oscilloscope output to find a range of attack/release that feels "good" to you. (Be sure to read the note below about scaling simulation times.)
+The comparator output (which we can call the true "gate" signal) swings between [0V, 12V], feeding the RC network with a 12Vpp square wave and resulting in a simple AR envelope. Assigning a slider to the resistor value simulates a potentiometer that allows the attack and release value to be set. (Warning: If you are breadboarding already, be warned that a potentiometer by itself could cause a short-circuit if you lower the value near 0Ω. Put a small (400Ω) resistor in series with the potentiometer to set a "lower limit" on RC resistance.) You can experiment with the potentiometer range: use the oscilloscope output to find a range of attack/release that feels "good" to you. Be sure to read the note below for a helpful simulation trick.
 
 > **Scaling Simulation Time**
 >
@@ -1443,19 +1443,91 @@ Also keep in mind that we shouldn't require the input CV to be perfectly 0V or 5
 
 > This subsystem is the least rigid in terms of design, meaning it affords you (the designer) with a lot of freedom. We've been designing and implementing lots of complex circuitry, so for this subsystem, you'll have the opportunity to set a lot of the values yourself, according to your intuitions. Of course, you can always go with the values in the schematics here, but engineering is full of trade-offs. If you feel comfortable, experiment to discover what other values you might prefer.
 
+
 ### Separating Attack and Release
+Although the potentiometer allows us to alter the envelope shape, the effect is applied to _both_ the attack and release. Our problem is that the capacitor charges and discharges through the same resistor. Consider how this circuit could be modified to give different resistances on charge and discharge. 
+
+An easy solution is to use two diodes with separate "attack" and "release" potentiometers. Diodes only allow current to flow in the direction they point, so if we use them to create two one-way "lanes", we can route current into separate "charge" and "discharge" paths.
+
+<img src="res/AR-diode-env.png" height=350 />
+
+_Separate "attack" and "release" via a diode and two potentiometers. [[Falstad]]https://tinyurl.com/2ojb4695)_
+
+Also note that we added in the 400Ω current-limiting resistor mentioned earlier. We can use other sizes, but be careful to calculate the current and power:
+
+$$I_{max} = \frac{12V}{400\Omega} = 30mA$$
+
+$$P_{max} = I^2 R = (30mA)^2 (400) = 360mW$$
+
+If you use 1/4W (250mW) resistors, this could be too much for them — although because it's so brief, the resistor is unlikely to heat up too much. We can also use simulation to plot the power over time.
+
+<img src="res/power-400ohm.png" height=300 />
+
+_Simulation of a capacitor at 12V discharging across 400Ω._
+
+> The LTSpice simulation above uses an _initial condition_ command to set 12V at the "Cap" node on simulation startup. You can find more information on the .ic command in the [LT Wiki](https://ltwiki.org/LTspiceHelpXVII/LTspiceHelp/html/DotIC.htm). (This is from the Help file — open LTSpice and click "Help" to read the documentation! It's dry, but useful.)
+
+To make this a usable envelope generator, we just need to add a buffer at the output, ensuring that the next circuit  receiving the envelope doesn't mess up the circuit.
+
+<img src="res/AR-diode-env-buffered.png" height=350 />
+
+_A usable AR envelope generator. [[Falstad]](https://tinyurl.com/2z7pmsdt)_
+
+
+### Decay And Sustain
+Adding decay and sustain is a challenge, and — full disclosure — we're not going to get a perfect ADSR circuit. While precise ADSR can be built, there's a much easier way to get a very usable ADSR. We already have an AR envelope, and by simply building on to this, we can get a functional ADSR.
+
+Let's think about what we already have: our attack takes us from 0V to the peak (12V), where it holds that value until the gate ends and the release takes over. What's missing is a "drop" (decay) from 12V to some intermediate voltage (sustain). Instead of trying to modify the AR envelope, let's consider what additional waveform, added to the AR, would give us an ADSR shape. 
+
+<img src="res/adsr.png" height=300 />
+
+_What does this shape look like?_
+
+The decay looks somewhat like another RC time constant! If we had another AR envelope which "fired" after our first AR neared its peak, we could subtract that from the original to get an "ADSR" shape.
+
+<img src="res/adsr-components-matlab.png" height=350 />
+
+_Triggering a second AR envelope when the first reaches 11V would provide the same (inverted) shape as the decay/sustain of an ADSR._
+
+This is our goal. Consider what we'll need to build this:
+
+1. A way to indicate when the AR envelope nears its peak
+2. A second (DS) envelope
+3. A way to subtract (AR envelope)-(DS envelope)
+
+Detecting when the AR envelope reaches its peak sounds like a job for a comparator, which can go "high" to indicate when the AR envelope is above a certain level. (We'll call this indication a "Flag".) One solution we might try is to add a comparator with a threshold trigger near 12V. Note that we don't want to set it _at_ 12V, because the AR might not ever get there — if the AR only hits 11.999V, this won't be enough to trigger the comparator. To be safe, we could set our trigger to raise a "flag" when the AR reaches 11 or 11.5V. The figure below shows what this looks like with a reference voltage of ~ 11V. (We're cutting off parts of the schematic, but they are unchanged from before.)
+
+<img src="res/ar-flag-comparator.png" height=300 />
+
+_We can superimpose the AR output on the new AR Flag output to verify that it fires near the AR peak. [[Falstad]](https://tinyurl.com/2q6fuz78)_
+
+Connecting the Flag output to another RC network produces a DS envelope. If we make the resistor adjustable (via a potentiometer + current-limiting resistor!), our decay time is now user-controllable.
+
+<img src="res/ds-comparator.png" height=300 />
+
+_A DS envelope. [[Falstad]](https://tinyurl.com/2f5d6sbx)_
+
+#### Waveform Subtraction
+We know how to add waveforms using a passive mixer. We could: 
+// Buffer first
+// Let's use an inverting op-amp config to subtract
+// Passive mix with the original AR envelope
+// Changing the ratio allows for sustain level to be set
+
+#### Fixing the ADSR Tail
+
+ While this is a tempting solution, think about what happens to the flag signal at the end of a "gate". Because the comparator only does a single comparison (at 11V), its output drops almost immediately when the gate is released. To see why this is problematic, consider that our plan is to _subtract_ a second signal from the first.
+
+<img src="res/bad-adsr.png" height=350 />
 
 
 
 
 
-
-
-
-
-
-
-
+### Build Notes
+_**Under construction**_
+10V comparator instead of 12V because of rail-to-rail not guaranteed
+If you happen to have rr op-amp, feel free to use 12V but I'm going to continue with 10V.
  
 
 
