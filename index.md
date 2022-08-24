@@ -1,3 +1,17 @@
+---
+puppeteer:
+    pdf:
+        format: Letter
+        margin:
+            top: 1in
+            right: 1in
+            bottom: 1in
+            left: 1.5in
+    image:
+        quality: 100
+        fullPage: true
+---
+
 <h1 align="center">AES Synthesizer System Design</h1>
 
 
@@ -18,19 +32,19 @@
 # 0.0 The Goal (And What To Expect)
 Building a synthesizer is difficult. I'm not saying this to scare you away, but to prepare you: this will be a challenge. That said, it will be an extremely rewarding challenge, and a great accomplishment. Synthesizers combine knowledge from across an electrical engineering education, and building one requires applying your knowledge in a way that will solidify your understanding of electronics and make you a far better engineer. Of course, any difficult journey deserves proper motivation, so this is what you can expect from this project:
 
-By the end of this series, you will have a synthesizer consisting of four modules: an oscillator, amplifier, filter, and envelope generator (ADSR).
+By the end of this series, you will have a synthesizer consisting of four modules: an **oscillator**, **amplifier**, **filter**, and **envelope generator (ADSR)**.
 
-The filter consists of a simple high- and low-pass stage, controllable via potentiometer knobs. This system applies the concepts of impedance and frequency-dependence, and we will have to make decisions as designers about sensitivity and filter range. The filter is not voltage-controlled, although you will be able to do this by the end of this series, by applying the fundamentals we cover in other subsystems.
+**The filter** consists of a simple high- and low-pass stage, controllable via potentiometer knobs. This system applies the concepts of impedance and frequency-dependence, and we will have to make decisions as designers about sensitivity and filter range. The filter is not voltage-controlled, although you will be able to do this by the end of this series, by applying the fundamentals we cover in other subsystems.
 
- The oscillator, by contrast, _is_ voltage-controlled. This means that the pitch can be set via an adjustable power supply, an Arduino, a set of mechanical switches, or any other voltage output we can control. It is capable of generating sawtooth waves from 20Hz - 3kHz, and you will have the knowledge to modify it to produce triangle and pulse-width signals, as well. In the process, you'll learn about operational amplifiers and comparators, relaxation oscillators, negative and positive feedback, hysteresis, transistor switches, as well as parasitics and other real-world implementation concerns.
+ **The oscillator**, by contrast, _is_ voltage-controlled. This means that the pitch can be set via an adjustable power supply, an Arduino, a set of mechanical switches, or any other voltage output we can control. It is capable of generating sawtooth waves from 20Hz - 3kHz, and you will have the knowledge to modify it to produce triangle and pulse-width signals, as well. In the process, you'll learn about operational amplifiers and comparators, relaxation oscillators, negative and positive feedback, hysteresis, transistor switches, as well as parasitics and other real-world implementation concerns.
  
- The amplifier is also voltage-controlled, and will amplify tiny signals (~10mV) so that they can be played on our speakers. This subsystem will teach you about differential pairs, AC analysis, the transistor "linear" operation, and component matching.
+ **The amplifier** is also voltage-controlled, and will amplify tiny signals (~10mV) so that they can be played on our speakers. This subsystem will teach you about differential pairs, AC analysis, the transistor "linear" operation, and component matching.
 
- Finally, the envelope generator is a "triggered" circuit that uses resistor-capacitor (RC) networks to create predictable, controllable time-varying voltage signals, giving the full ADSR control. By the time we get here, you'll have a lot of knowledge and practice at building circuits, so this is the most "flexible" design — you'll get to make a lot of decisions that will shape the sound and how your synth responds to user input. This section will teach concepts of gates, ADSR, RC time constants, inverting and summing op-amps, and transistor discrete logic.
+ **The envelope generator** is a "triggered" circuit that uses resistor-capacitor (RC) networks to create predictable, controllable time-varying voltage signals, giving the full ADSR control. By the time we get here, you'll have a lot of knowledge and practice at building circuits, so this is the most "flexible" design — you'll get to make a lot of decisions that will shape the sound and how your synth responds to user input. This section will teach concepts of gates, ADSR, RC time constants, inverting and summing op-amps, and transistor discrete logic.
 
  In total, this series will familiarize you with content from the introductory Circuits series, as well as EE 306/307/308, and 409. The list of topics covered makes this sound like a project for 3rd- or 4th-year students in Electrical Engineering, but the whole point of this project is that you don't need those classes (yet!) to get started building synthesizers. Most people, with a bit of effort, can understand the fundamentals of how these systems work. In the process, you'll get to build something really special: your own DIY synth.  
 
-  
+
 # 1.0 Fundamentals
 A disclaimer: Don't treat this like a reference manual. This is a guide to get you to a goal. Everything in this text aims to be true, but in pursuit of the goal, we will embrace approximations, occasional half-truths, and plenty of omissions, whereas a reference source (such as a textbook) might not. Use it as a tool in pursuit of the goal — as a supplement for your education — and it will serve you well.  
 
@@ -137,7 +151,7 @@ We will introduce active elements as we progress, but there are some basics whic
 <img src="res/ics.png" height=250 />
 
 ### Schematics, Simulation, Build, and Test
-Electrical circuits are documented in diagrams known as _schematics_,  which use common symbols for different types of circuit elements. Lines indicate wire connections between elements. Unless otherwise stated, wires are assumed to have 0 resistance, and therefore all points connected by wires (called _nodes_) share the same voltage. Elements which are connected end-to-end share a single node in common and are called _series_-connected, while elements which share two nodes are called _parallel_-connected. (Two parallel components are often denoted in shorthand with "//", eg. R1 // R2.)
+Electrical circuits are documented in diagrams known as _schematics_,  which use common symbols for different types of circuit elements. Lines indicate wire connections between elements. Unless otherwise stated, wires are assumed to have 0 resistance, and therefore all points connected by wires (called _nodes_) share the same voltage. Wire connections can also be implied by nodes with the same name. Elements which are connected end-to-end share a single node in common and are called _series_-connected, while elements which share two nodes are called _parallel_-connected. (Two parallel components are often denoted in shorthand with "//", eg. R1 // R2.)
 
 <img src="res/series-vs-parallel.png" height=300 />
 
@@ -1501,49 +1515,134 @@ Detecting when the AR envelope reaches its peak sounds like a job for a comparat
 
 _We can superimpose the AR output on the new AR Flag output to verify that it fires near the AR peak. [[Falstad]](https://tinyurl.com/2q6fuz78)_
 
-Connecting the Flag output to another RC network produces a DS envelope. If we make the resistor adjustable (via a potentiometer + current-limiting resistor!), our decay time is now user-controllable.
+Connecting the Flag output to another RC network produces a DS envelope. If we make the resistor adjustable (via a potentiometer + current-limiting resistor!), our decay time is now user-controllable. We could also add a variable resistive divider at the output, allowing the DS envelope to scale between 0V and 12V peak, but we'll soon discover another way to implement scaling.
 
 <img src="res/ds-comparator.png" height=300 />
 
 _A DS envelope. [[Falstad]](https://tinyurl.com/2f5d6sbx)_
 
-#### Waveform Subtraction
-We know how to add waveforms using a passive mixer. We could: 
-// Buffer first
-// Let's use an inverting op-amp config to subtract
-// Passive mix with the original AR envelope
-// Changing the ratio allows for sustain level to be set
+#### Waveform Scaling and Subtraction
+We know how to add waveforms using a 2-input passive mixer. This implies that we could also subtract two inputs, provided we can invert one of them first. Luckily, this is easily accomplished via another op-amp configuration: the inverting op-amp. Notice in the figure below that we now have signal entering the _inverting_ (-) terminal!
+
+<img src="res/inv-opamp.png" height=300 />
+
+For any input $V_{in}$, an inverting op-amp has theoretical gain $$A = -\frac{R_f}{R_{in}}$$. If we size $R_{in} = R_f$, then the gain is simply $A = -1$ and we get an inverted copy of the waveform at the op-amp output. Additionally, if we make the feedback resistance variable (using a potentiometer + current-limiting resistor), we can vary gain to any value between 0% and 100% (inverting). Notice that the resistor values don't, by themselves, affect gain — only their ratio. Therefore, we'll size them to ensure low current even when the gain is low. (Low gain implies $R_f$ is small relative to $R_{in}$. The current-limiting resistor in the feedback path sets a lower-limit for $R_f$, so we'll need $R_{in}$ to be large in comparison. Setting both resistances ~ 100kΩ, then, will allow for a lower gain limit of $A = \frac{1k}{100k}$ = 0.01, which is close enough to 0.) 
+
+Adding this into our envelope generator has a catch: whereas in the past, we've seen that op-amps have no effect on their input circuits (via high input impedance), we'll need a separate buffer on the DS signal _before_ the inverting op-amp configuration! While the op-amp itself has high input impedance and negligible current entering _its_ input terminals, the inverting configuration's _resistors_ provide a path for current to flow. Without a buffer before the inverting circuit, these resistors would alter the RC network's operation. (Notiice how a non-inverting op-amp configuration doesn't have this problem.) Therefore, we'll buffer first, then invert.
+
+<img src="res/ds-inv.png" height=300 />
+
+_Buffering the DS signal, then inverting it via an inverting op-amp. [[Falstad]](https://tinyurl.com/2eoqolkd)_
+
+Now we just need to mix (add) the signals together, which we've done before (in the [Oscillator]()) using a modified voltage divider! We can simplify the schematic by using node names to reference our signals from earlier; the resulting output resembles an ADSR!
+
+<img src="res/ar-plus-dsinv-issue.png" height=300 />
+
+_ADSR-ish output, with some problems that we'll fix. [[Falstad]](https://tinyurl.com/2prllnru)_
+
+Our output looks close to an ADSR, but it has two noticeable problems that we'll fix:
+
+1. The ADSR envelope ranges [0V, 6V] max, not [0V, 12V]. 
+2. What's that weird "spike" at the end?
+
+#### Fixing the Range
+Recall that the passive mixer gives an _average_ of inputs, or $\frac{\text{In}_1 + \text{In}_2}{2}$. Because our inputs are symmetric about 0V, this causes the output maximum to be $\frac{12V + 0V}{2}$ = 6V. 
+
+To fix this, we can make a quick modification on the following buffer which turns it into an amplifier. 
+
+<img src="res/non-inv-opamp.png" height=300 />
+
+_Non-inverting op-amp configuration._
+
+The non-inverting op-amp has gain 
+
+$$A = 1 + \frac{R_f}{R_g}$$
+
+In this case, we want a gain of 2, so we'll make $R_f$ twice the size of $R_g$. (Note: You *could* also size $R_f$ to get gain slightly larger than 2. Because the trigger for the Attack Flag is at 11V, our waveform only gets 11V peak, not 12V. Scaling would make up for this. However, when sustain is set to output at 100% (low resistance, doesn't cut original AR), this effect disappears and you would then be _above_ 12V. This can be mitigated via intelligent sizing of the current-limiting resistor that is in series with the Sustain potentiometer; but is beyond the scope for this build guide. It's a good [future improvement to implement](), though!)
+
+> In fact, the op-amp buffer we've been building throughout this project is actually a specific implementation of a _non-inverting op-amp_ configuration: If we let $R_f = 0$ and $R_g = \infty$, then the gain becomes $A = 1 + \frac{0}{\infty} = 1$ and the resulting schematic is electrically equivalent to a buffer. (Replace $R_f$ with a wire (short), and disconnect (open) $R_g$ entirely.)
+
+<img src="adsr-noninv-opamp.png" height=300 />
+
+_Doubling the scale of the ADSR. [[Falstad]](https://tinyurl.com/2hc7do6v)_
+
 
 #### Fixing the ADSR Tail
 
- While this is a tempting solution, think about what happens to the flag signal at the end of a "gate". Because the comparator only does a single comparison (at 11V), its output drops almost immediately when the gate is released. To see why this is problematic, consider that our plan is to _subtract_ a second signal from the first.
+The "jump" at the tail end of the ADSR output is not easy to diagnose. It occurs because of the way we implemented our Attack Flag. Think about what happens to the flag signal at the end of a "gate". Because the comparator only does a single comparison ("Is it higher than 11V?"), its output drops almost immediately when the gate is released. To see why this is problematic, consider that our Decay and Sustain levels occur by _subtracting_ a second signal from the first. What happens to the resulting ADSR signal when the subtracted DS is suddenly removed? It returns to the AR's envelope level.
 
 <img src="res/bad-adsr.png" height=350 />
 
+_The ADSR "spike" is caused by DS returning to 0V, removing the "subtraction" from the ADSR output._
 
+Compare this to the original ADSR that we wanted, and it's clear that we want the DS to continue holding until the AR envelope returns to zero.
 
+<img src="res/adsr-components-matlab.png" height=350 />
 
+_The original ADSR we proposed._
+
+In other words, we need the comparator to go "HIGH" when the AR envelope reaches 11V, and go "LOW" only when it returns to ~ 0V. We've done _this_ before, as well, with a hysteretic comparator! In this case, we'll want to set the window as wide as possible, while still ensuring the AR waveform will pass the trigger thresholds. Recall the formulas for the hysteretic comparator are:
+
+$$V_{trip,low} = V_{bias}\frac{R_{in}}{R_{in}+R_f} + V_{comp,low}\frac{R_f}{R_{in}+R_f}$$
+
+$$V_{trip,high} = V_{bias}\frac{R_{in}}{R_{in}+R_f} + V_{comp,high}\frac{R_f}{R_{in}+R_f}$$
+
+> Alternatively, you can experiment with values and use intuition to guide you: Think of the comparator's voltage divider (between output and input) as favoring the output or input more, depending on the ratio of the two resistors. Larger values of $R_f$ prevent the comparator output from moving the divider midpoint as much, giving more weight to the input signal — this means the input signal doesn't need to move as far to "trip" the comparator. Smaller values of $R_f$ mean the comparator output has more "pull" on the midpoint versus the input signal, requiring the input signal to move _farther_ to "trip" the comparator. 
+>
+> Of course, at minimum, $R_{in} \leq R_f$ or else the comparator won't trip. To see why, consider when the output is 0V. With equal resistances, the input needs to hit 12V for the midpoint (at the comparator input) to hit 6V. But if $R_{in} > R_{in}$, then even at 12V input, the midpoint will never cross 6V.
+
+<img src="res/adsr-hysteretic-attack-flag.png" height=300 />
+
+_Changing the comparator to a hysteretic comparator. R={10k, 12k} gives trip points ~ {1V, 11V}. [[Falstad]](https://tinyurl.com/2o2jc669)_
+
+(More [future work]() opportunities: The hysteretic window can be shifted vertically, to be symmetric about some value other than 6V. You might choose to bias toward lower "LOW" thresholds, or higher "HIGH" thresholds as an improvement to the ADSR envelope.)
+
+This creates a new, albeit better, problem: the output of the ADSR now swings negative. Ending the DS "subtraction" early caused a "spike", but leaving it for too long causes a "dip" below 0V. The original image showing the output was "clipped" at 0V, but zooming out shows that the output _does_, in fact, go negative. The [simulation](https://tinyurl.com/2o2jc669) from above shows this flaw.
+
+<img src="res/adsr-negative-tail.png" height=350 />
+
+_The ADSR has a negative "dip" if DS stays on._
+
+To fix this, we simply need to ensure that the output is never allowed to be "pulled" below 0V. This can be easily ensured via a diode, as shown below. Because a diode only allows current flow across a one-way voltage difference, it will allow the (buffered) output voltage to appear across the 10kΩ output resistor; however, when the voltage goes negative, the diode doesn't allow current, and any remaining charge at the ADSR output drains across the resistor to GND.
+
+<img src="res/adsr-diode-fix.png" height=300 />
+
+_Fixing the "dip" with a diode. [[Falstad]](https://tinyurl.com/2eukqfkh)_
+
+#### Improving DS Decay
+There is one final problem with the ADSR, which is difficult to notice because it only happens in specific circumstances. Consider: What if:
+
+- the decay time is long (relative to release time)
+- the gate drops low
+- and almost immediately, the gate rises again to trigger a new note? 
+
+In other words, what if someone tries to play a second note, shortly after the first? We can simulate this by setting the input CV to a large _duty cycle_, meaning that it stays high for longer than it is short. (Eg. Duty cycle of 95% means the signal is "HIGH" for 95% of the total period.) With a short gap between notes, the DS capacitor won't have enough time to discharge. This has consequences for the "downstream" circuitry — because it is being subtracted, if the DS doesn't return to 0V, then the ADSR output will never reach the 11 or 12V peak that it's supposed to.
+
+<img src="res/ds-not-reset.png" height=300 />
+
+_DS doesn't have enough time to reset to 0V if there is only a brief gap between notes._
+
+In truth, this doesn't _need_ to be addressed. The synth will work well and sound good without fixing it, and it might even be a unique, charming quirk of the design — a synth that gets quieter if notes are played in rapid succession. However, here is a way we could address it.
+
+If we had an indicator for when a note was _finished_ playing, we could use that to tell something else to rapidly discharge the DS capacitor. This indicator can be constructed by the logical opposite of the Attack Flag. (We might want to think of it as an "AR" or "note" flag at this point, given how it's now being used to indicate when the AR envelope is "playing" a note versus silent.) Logical negation can be done with BJTs, but an easy way is to simply wire a comparator with the inputs flipped: when the input is high, the output is low, and vice-versa. 
+
+With an "output-high" indicator for "AR envelope has returned low", we can pass this to a single BJT, creating a path for all the charge to leave the capacitor rapidly. A resistor at the base limits base current, but with 12V applied, the BJT will "open the valve" almost entirely, allowing almost unlimited current from the capacitor to GND. We'll put a small (10Ω) resistor to prevent the capacitor from discharging _too_ quickly. Regardless, charge will drain (nearly) immediately, and means that — even with a very short gap between notes — the capacitor will always have time to discharge when the AR envelope drops.
+
+<img src="res/ds-drain-path.png" height=300 />
+
+_With a single comparator and BJT, we've ensured the DS envelope will always reset between notes. [[Falstad]](https://tinyurl.com/2r2dk4nl)_
 
 ### Build Notes
 _**Under construction**_
 10V comparator instead of 12V because of rail-to-rail not guaranteed
 If you happen to have rr op-amp, feel free to use 12V but I'm going to continue with 10V.
  
+ Sizing resistors: wherever relationships are concerned, need to precisely match. Eg. inverting op-amp could amplify if Rf > Rin. Err on Rf < Rin.
 
 
 
-### Op-Amps
+## 2.6 System Integration
 
-If we manipulate the feedback before its arrival at the inverting terminal, we can modify the values that the op-amp sees. For example, we could cut the feedback values in half via a voltage divider. 
-
-Imagine applying 5V to the input of the following circuit. If the output starts at 0V, the op-amp will compare $(V_+ - V_-) = 5 - 0$ and push current out in order to bring the output positive. In the buffer setup, the comparison $(V_+ - V_-) = 0$ is achieved when the output reaches 5V; however, with the voltage divider, an output of 5V will only cause 2.5V at the input! The output will continue to increase until it reads 5V at the inverting input, or 10V at the output. The "doubling" behavior holds for all practical inputs to this op-amp configuration, and more generally, an op-amp in this configuration is called a "non-inverting" op-amp. The formula for this is:
-
-$$V_{out} = V_{in+} (1 + \frac{R_f}{R_{g}})$$
-
-Notice that if we make $R_f = 0$ or $R_g = \infty$, the formula (and circuit) becomes the same as a buffer, following $V_{out} = V_{in+}$. 
-
-
-<img src="res/non-inverting-2x.png" height=250 />
 
 ## 3.0 Future Work
 ### Additional Oscillators & Noise
