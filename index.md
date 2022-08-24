@@ -243,7 +243,61 @@ Power sources are usually DC, set to constant values such as ±12V to supply cir
 
 # 2.0 The Synthesizer
 
+## 2.0.3 Roadmap
+
+A system build has a lot of steps, but it becomes a lot more manageable when broken into tasks. Here is a list of goals we'll need to tackle along the way, in order. This will let you track your progress as you get closer to a complete build.
+
+**System Overview**
+- [ ] Determine constraints
+
+**Speaker Output Buffer**
+- [ ] Breadboarding & test
+
+**Filter**
+- RC Low-Pass Filters
+	- [ ] RC low-pass step response
+	- [ ] Filtering waveforms
+	- [ ] Cutoff frequency
+- RC High-Pass Filters
+- Cascading LP & HP Filters
+	- [ ] Buffer the filters
+	- [ ] Breadboarding & test
+
+**Oscillator**
+- [ ] Triangle wave (resistive)
+- [ ] Sawtooth wave (resistive)
+- [ ] Add voltage control
+- [ ] Input conditioning to accept 0-5V CV
+- [ ] Basic thermal compensation
+- [ ] Breadboarding & test
+
+**Amplifier**
+- Common-Emitter Amplifiers
+	- [ ] Simulate to understand CE operation
+	- [ ] Quantify gain & gm
+- Differential Pairs
+	- [ ] Understand DC & AC theory of operation
+	- [ ] Implement adjustable gain
+	- [ ] Remove output offset
+
+**Envelope Generator**
+- [ ] Create AR envelope
+- [ ] Separate attack & release
+- [ ] Implement decay & sustain
+- [ ] Fix output range
+- [ ] Fix ADSR "tail"
+- [ ] Fix DS decay time
+
+**Synth System Integration**
+- [ ] Connect everything
+- [ ] Test, fix, test
+- [ ] Check this box when it works!
+
+
+
 ## 2.0.1 Bill of Materials (BOM)
+
+
 
 ## 2.0.2 System Overview
 
@@ -288,19 +342,6 @@ For simplicity, our design will use the following constraints across the entire 
 
 Power and signal levels typically have the most impact to the overall system, so with these constraints, we should be able to avoid any big design problems.
 
-## 2.0.3 Roadmap
-_**Under construction**_
-
-This is where I'll outline each major step that needs to be done to build each system. It acts as a checklist along the way, so people know what steps need to be done & where they are in the overall build process.
-
-**Oscillator:**
-- [ ] Triangle wave (resistive)
-- [ ] Sawtooth wave (resistive)
-- [ ] Add voltage control
-- [ ] Input conditioning to accept 0-5V CV
-- [ ] Basic thermal compensation
-
-Etc.
 
 
 ## 2.1 A Basic Speaker Output Buffer
@@ -383,7 +424,7 @@ Capacitors are like tiny battery cells. As the symbol suggests, capacitors store
 
 Because the accumulation of charged particles is what gives a capacitor voltage, a capacitor cannot instantaneously change its voltage. For example, a capacitor charged to 10V cannot immediately discharge to 0V — all the charges would need to leave the capacitor, and while this _can_ happen very rapidly (~nanoseconds), it still requires some finite amount of time. Additionally, this means that a capacitor cannot change its voltage without a conductive path for charges to travel along. A capacitor that is charged to 10V and removed from a circuit will retain ~10V across its terminals until a conductive pathway exists to remove them. (For this reason, large capacitors are extremely dangerous! Even if a system is disconnected from a power source, large capacitors may store charges that are simply waiting for a conductive path to discharge through.)
 
-#### Low-Pass RC Step Response
+#### RC Low-Pass Step Response
 Let's look at how the low-pass filter responds to voltage. 
 
 <img src="res/rc-lp-schematic.png" height=300 />
@@ -1305,7 +1346,7 @@ In a common-emitter amplifier with op-point $I_C$ = 1mA, we expect that a ±5mV 
 
 _The diff pair with 5mV at the input gives half the current we might expect. [[Falstad]](https://tinyurl.com/2e5tax5f)_
 
-The easy way out is to say, "The interaction of the two amplifiers causes input signal changes to have half the total effect as they would in a single common-emitter amplifier." This is true, but why? Let's start by stating what we _do_ understand. 
+The easy way out is to say, "The interaction of the two amplifiers causes input signal changes to have half the total effect as they would in a single common-emitter amplifier." This is true, but why? Let's start by stating what we _do_ understand. ^[audiophool-diff-amp]
 
 While the current-setting resistor, $R_{tail}$, is not ideal, it is good enough to trust the total current draw is still ≈ 2mA. A 0.1mA change in current would require greater than 50mV change in the emitter node voltage, and this seems unlikely. (One of the bases is tied to 0V GND, so this would cause more than _two_ 18mV jumps in $V_{be}$ — meaning the current would need to change by more than a factor of 4!) Therefore (even if it weren't indicated by the ammeters) we can still safely assume that this circuit is drawing 2mA in total. 
 
@@ -1402,7 +1443,6 @@ Include implementation in Falstad of actual amp, using un-adjusted SPICE models.
 
 
 ## 2.5 The Envelope Generator
-_**Under construction**_
 
 Our oscillator outputs a continuous, variable-frequency tone, but this isn't how most instruments sound. When musicians plays a note, the sound doesn't remain constant, but changes over time: the musician may increase the volume at the beginning, or adjust the volume mid-note; it may start suddenly, or gradually build up; and the musician can end the note abruptly or slowly fade out. Interestingly, the note maintains its pitch throughout this process (if the musician is any good), meaning the frequency is fixed while the _amplitude_ changes. 
 
@@ -1428,10 +1468,12 @@ Envelopes come with different shaping options, but typically allow users to cont
 
 _ADSR: Attack, Decay, Sustain, and Release. ADR control time, while S controls amplitude. [[Source]](http://www.audiomulch.com/blog/southpole-expedition-part-3-pattern-sequenced-adsr-envelopes)_
 
+
+
 ### A Basic AR Envelope
 At its most basic, an attack/release envelope generator should accept CV input which triggers a gate when it goes high (5V). The output signal should rise at a defined rate, hold for the duration of the gate, and fall at a defined rate when the gate returns low.
 
-We've already seen an envelope generator that fulfills these requirements: the low-pass RC filter! 
+We've already seen an envelope generator that fulfills these requirements: the low-pass RC filter! ^[moritz-adsr]
 
 <img src="res/rc-lp-waveforms.png" height=300 />
 
@@ -1640,7 +1682,6 @@ If you happen to have rr op-amp, feel free to use 12V but I'm going to continue 
  Sizing resistors: wherever relationships are concerned, need to precisely match. Eg. inverting op-amp could amplify if Rf > Rin. Err on Rf < Rin.
 
 
-
 ## 2.6 System Integration
 
 
@@ -1656,3 +1697,5 @@ If you happen to have rr op-amp, feel free to use 12V but I'm going to continue 
 [^nate]: Nate Hatch Fender Component Selection https://www.youtube.com/watch?v=FacBtCPez2U&t=7s
 [^pcheung]: Pcheung's Aero notes
 [^merberich]: Michael Erberich's AES Microcontroller Workshop https://merberich.github.io/aes_microcontroller_workshop/#electronics-fundamentals
+[^audiophool-diff-amp]: For an alternative explanation of differential pair, I highly recommend [The Audiophool's explanation](https://youtu.be/Mcxpn2HMgtU)! It's an alternative way to look at the diff pair's theory of operation.
+[^moritz-adsr]: The core of the AR envelope generator is derived from Moritz Klein in his ["ADSR-ish" video](https://youtu.be/aGFb7JbTdNU). However, the design departs from Moritz's implementation after that.
