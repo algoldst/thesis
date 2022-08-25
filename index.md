@@ -18,6 +18,10 @@ puppeteer:
 # Table of Contents
 - [0.0 The Goal](#00-the-goal-and-what-to-expect)
 - [1.0 Fundamentals](#10-fundamentals)
+	- [Sound & Audio Fundamentals
+	](#sound--audio-fundamentals)
+	- [Basic Waveforms]()
+	- [Electronics](#electronics)
 - [2.0 The Synthesizer](#20-the-synthesizer)
 	- [2.0.1 Bill of Materials](#201-bill-of-materials-bom)
 	- [2.0.2 System Overview](#202-system-overview)
@@ -26,8 +30,8 @@ puppeteer:
 	- [2.3 The Oscillator](#23-the-oscillator)
 	- [2.4 The Amplifier](#24-the-amplifier)
 	- [2.5 The Envelope Generator (ADSR)](#25-the-envelope-generator)
-	- 2.6 Putting It All Together
-- 3.0 Other Stuff
+	- [2.6 Synthesizer System Integration](#26-synthesizer-system-integration)
+- [3.0 Future Work](#30-future-work)
 
 # 0.0 The Goal (And What To Expect)
 Building a synthesizer is difficult. I'm not saying this to scare you away, but to prepare you: this will be a challenge. That said, it will be an extremely rewarding challenge, and a great accomplishment. Synthesizers combine knowledge from across an electrical engineering education, and building one requires applying your knowledge in a way that will solidify your understanding of electronics and make you a far better engineer. Of course, any difficult journey deserves proper motivation, so this is what you can expect from this project:
