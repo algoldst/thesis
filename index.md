@@ -935,7 +935,7 @@ This is proven in the simulation below. (The biggest discrepancies come from the
 
 _Protecting the BJT from a short-circuit with an input resistor. [[Falstad]](https://tinyurl.com/2qne7f5k)_
 
-The good thing about this resistor is that it protects from short-circuits, but also has little effect on the BJT when we apply the intended voltage inputs. The BJT will try to maintain the typical 0.6V "forward active" drop. For example, if we apply only 500mV, then in a forward-active configuration, most of the 500mV must drop across $V_{BE}$. This leaves the resistor with barely any current to drop voltage across itself.
+The good thing about this resistor is that it protects from short-circuits, but also has little effect on the BJT when we apply the intended voltage inputs. The BJT will try to maintain the typical (~0.6V) "forward active" drop. For example, if we apply only 500mV, then in a forward-active configuration, most of the 500mV must drop across $V_{BE}$. This leaves the resistor with barely any current to drop voltage across itself.
 
 $$V_{BE} = 0.5 \implies I_C = 20\mu A$$
 
@@ -944,6 +944,10 @@ $$I_B = \frac{I_C}{\beta} = \frac{20\mu}{100} = 200\text{nA}$$
 $$V_{R_B} = I_{R_B} R_B = (200n)(10k) = 2\text{mV}$$
 
 So at our typical input voltage of ~500mV, the resistor will only drop ~2mV before hitting the base of the BJT.
+
+<img src="res/osc-npn-base-res.png" height=300 />
+
+_[[Falstad]](https://tinyurl.com/2ngov5ay)_
 
 ### Build Notes From The VCO
 _**Under construction**_
@@ -1010,28 +1014,40 @@ $$\implies V_{out} = V_{CV}(\frac{2}{100}) + V_{bias}(\frac{98}{100})$$
 
 This implies that the resistors must be sized to maintain this ratio: We'll choose $R_{bias} = 98k\Omega$ and $R_{CV} = 2k\Omega$.
 
-Although we don't know the Bias voltage, we know the output that we want when $V_{CV}$ = 0V or 5V. We can choose to solve for voltage in either:
+Although we don't know the bias voltage yet, we know the output that we want when $V_{CV}$ = 0V or 5V. We can choose to solve for voltage in either:
 
 $$ 
-\left\{
+\left.
     \begin{array}{l}
       450\text{mV} = (0V)\frac{2k\Omega}{2k\Omega+98k\Omega} + V_{bias}\frac{98k\Omega}{2k\Omega+98k\Omega}\\
       \\
       550\text{mV} = (5V)\frac{2k\Omega}{2k\Omega+98k\Omega} + V_{bias}\frac{98k\Omega}{2k\Omega+98k\Omega}
     \end{array}
-  \right.$$
+\right\} \implies V_{bias}=0.459\text{V}$$
 
-Using LTSpice allows us to confirm this is true. We can set the CV input to range between [0V, 5V] for 0-50ms, observing the output at each point. 
+Using LTSpice allows us to confirm this is true. Setting the CV input to range between [0V, 5V] for 0-50ms, we can observe the output makes a straight line from 450mV - 550mV. 
 
 <img src="res/scale-shift-ltspice.png" height=300 />
 
-We can buffer this output before passing it to the BJT base, and have successfully ensured that any valid CV input (0-5V) will work with our oscillator.
+> LTSpice vs Falstad
+> 
+> Falstad simulator is a powerful and convenient tool to use for a lot of design work. However, especially when you need to do an analysis that _doesn't_ involve time as a parameter — for example, we want to see the input/output relationship between two voltages — LTSpice is a clear winner.
 
-> Falstad simulator is a powerful and quick tool to use for most simulation. However, when you need to do an analysis that _doesn't_ involve time — for example, we want to see the output for changing _voltage_ input — LTSpice is a clear winner over Falstad.
+Adding this to the oscillator involves simply buffering the output before passing it to the BJT base. However, we don't want to waste a power supply just to get a specific bias voltage (eg. 459mV). Instead, we can applying another voltage divider between the +12V rail and GND to fine-tune our offset. After making these changes, we have successfully ensured that any valid CV input (0-5V) will work with our oscillator. If we implement the resistances $R_{CV}$ and $R_{offset}$ with potentiometers, we'll have an oscillator with adjustable offset (in theory, 450mV) and the scaling (in theory, 100mV).
+
+<img src="res/osc-05-cv-in.png" height=300 />
+
+_The oscillator accepts 0-5V CV input. [[Falstad]](https://tinyurl.com/2zd8yexo)_
 
 ### Temperature Compensation
+_**Under Construction**_
 
 ### Oscillator Build Notes
+
+450-550 isn't going to be guaranteed, and it'll change a lot based on temperature as well. So we need potentiometers.
+Recommend sizing multiple pots to allow for coarse and fine tuning. Eg 10k+100k for tuning. Float the offset by putting a large-ish (22k) in series to -12V.
+
+We can remove the current-limiting resistor at this point. We're not going to accidentally get large input voltages at the base.
 
 ## 2.4 The Amplifier
 A synthesizer's amplifier directly controls the volume of the signal output. We could do this in many ways, and the most basic might be a simple voltage divider. However, we want the ability to control the volume in both directions: quieter, but also louder. This isn't possible using solely passive components like resistors and capacitors, because we need to add additional power to the circuit. Recall that our goal is to use CV to control the amplifier, meaning that the final subsystem design will turn 0-5V into a continuous range of volume levels.
@@ -1736,7 +1752,11 @@ If you happen to have rr op-amp, feel free to use 12V but I'm going to continue 
 
 
 ## 2.6 System Integration
+Once every subsystem is built, you're ready to connect! Start with the oscillator, and chain inputs and outputs until you reach the speaker output buffer. Check for known inputs and outputs of various subcircuits as you go. If something doesn't work, trace back to the last "known" test point and you should be able to diagnose any issues.
 
+Give every breadboard a solid power supply connection, or else the individual subsystems might not all receive exactly the same rail voltages. Similarly, connect each breadboard GND rail, and provide multiple paths from breadboard GND rails to the supplies to ensure that a reliable 0V is maintained across all breadboards.
+
+It's a scary process, but you should be able to get a full synthesizer system working pretty quickly! Here's a [YouTube video](https://youtu.be/DtJC3cJHXis) showing the system, and what yours might look and sound like. Good luck!
 
 ## 3.0 Future Work
 ### Additional Oscillators & Noise
