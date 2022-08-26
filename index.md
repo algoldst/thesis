@@ -626,18 +626,29 @@ _A high low-pass cutoff frequency + low high-pass cutoff frequency allows all fr
 
 ### Build Notes From The Filter
 
-_**Under construction**_
+As you build this on the breadboard, be sure to use **non-polarized capacitors only**! Electrolytic capacitors are polarized, meaning they _must_ have one side more positive than the other. If a polarized capacitor has a negative voltage across it, it acts like a short-circuit and can cause the capacitor to explode. Because we are sending audio signals through these filters, they might go negative. For reference, I used ceramic capacitors.
 
-BB layout from Schematic 
-Leave room for the HP filter soon!
+Capacitor sizing is fixed, but using a potentiometer allows us to vary the cutoff frequency. We can replace the resistor in both the LP and HP filters with a potentiometer, giving us two variable cutoff frequencies like in the simulations. Note that potentiometers are 3-terminal devices; that's because they act like _two_ resistors in series; the resistance value of a potentiometer is the total series resistance, from one outside terminal to the other outside terminal. Therefore, to use a potentiometer as a variable resistor, treat it as a 2-terminal resistor, using one of the "outside" terminals and the "middle" terminal. Leave the other one disconnected. 
 
-Use a non-polarized capacitor, eg. ceramic. 
+<img src="res/pot-as-var-resistor.png" height=200 />
 
-Notes about how capacitors are fixed, but we can use a potentiometer to vary cutoff
+_To use a potentiometer as a variable resistance, just connect across one of the internal resistances._
 
-How to use LT to simulate AC response 
+When using potentiometers, be careful to consider that **they go to 0Ω**. If you don't want that, you should install a resistor in series, which guarantees a lower-limit to the resistance. 
 
-Open question for students about how they want to trade sensitivity for filter cutoff range
+Also, recall that the simulations eventually "flipped" the sliders so that "high slider" → "low resistance" → "high cutoff"? If your potentiometer doesn't "map" properly, simply flip the connections. It's basically a variable resistor, so the circuit will be unchanged, except the direction that you turn the dial will flip. :)
+
+Beyond ~ 1kHz, I could not hear a very noticeable effect from low-pass filtering. This leaves the question to you: how much are you willing to trade sensitivity for filter cutoff range? Large potentiometers will give you lots of variation in cutoff frequency, but this also makes it more difficult to control with a fixed potentiometer knob. Conversely, smaller potentiometers and the placement of fixed series resistors will limit your ability to affect cutoff frequency; however, this makes it easier to move the cutoff precisely. The sensitivity and cutoff range are yours to determine — use your eyes (oscilloscope) and ears to find the range that works for you.
+
+You can use LTSpice to simulate filter frequency response. This is not something that Falstad is designed to handle well, because frequency response is not a time-domain simulation / analysis. Using LTSpice is beyond the scope of this guide, but this is what the final LT schematic should look like to do a .AC frequency simulation.
+
+<img src="res/filters-lt-ac-sim.png" height=300 />
+
+_LTSpice frequency sweep for LP & HP filters._
+
+Use a function generator to create input waveforms for your filters. Many function generators will allow you to output a "triangle" waveform and alter the "symmetry" — pushing this value to the extreme will make the triangle into a sawtooth. 
+
+Finally, I noticed that my high-pass filter added some "spikiness" to the waveform, even when the cutoff was low. This is difficult to mitigate, because moving the cutoff closer to 0Hz requires a massive resistance! If you have this problem, place the low-pass filter _after_ the high-pass. It will remove any high-frequency "spikes" that result from the high-pass filter.
 
 ## 2.3 The Oscillator
 The oscillator is the core of any synthesizer, generating periodic signals that we recognize as sound. There are many circuits which produce oscillations, but in general, oscillators can be categorized as either harmonic or relaxation.
@@ -827,15 +838,19 @@ Barring some component differences, this is approaching the sawtooth core that w
 
 ### Build Notes from the Basic Saw Core
 
-_**Under Construction**_
+Something which isn't immediately obvious about building this circuit is that observing its output (via scope probes) will alter the oscillation frequency. Usually, oscilloscopes don't affect the circuit that you're probing, but because of the extremely high resistance, it might. Oscilloscope probes generally have 1 Megaohm (1M) impedances, which are around the same value as our discharge potentiometer. If you connect the probes with the potentiometer at 1MΩ, you'll effectively provide two parallel resistances: 1M // 1M → 500kΩ equivalent resistance! This will double the oscillation frequency. In fact, you can even pull the discharge resistor entirely, and some scope probes will still allow the capacitor to discharge to GND through the probes! 
 
-Here I'm going to put a breadboard schematic, picture of the breadboard. This is where we'll replace the "resistor" in the discharge path with a potentiometer.
+Capacitor sizing will affect the oscillation frequency: a smaller capacitor holds less charge, despite oscillating at the same voltages as a larger one, and therefore gives a higher frequency. (You can also think of this in terms of RC time constants!) You'll want to use the largest-range potentiometer you've got. Still, 1-2 Megaohms is the largest size you'll probably have, and this places limits on capacitor sizes which will work for this circuit. Use the oscilloscope functions to measure the frequency, and try different capacitances to determine whiich one gives the "best" frequency range. (Different values may give multiple valid frequency ranges, each with their own tradeoffs. Do you want to be able to output super-low frequencies like 20-30Hz, or really high frequencies in the 3-4kHz range?)
 
-Notes about:
-- diode selection, and how the wrong diode can mess this up by adding capacitance and reverse current
-- capacitor sizing, and how the capacitance should be low to get a sharp rise time and low discharge current
+There's also a trade-off with capacitor sizing to be found in the quality of the output sawtooth. To complete each oscillation, an ideal sawtooth moves from low to high immediately. This is impossible in reality, but we want the transition to be as fast as possible. Using a small capacitance, the time it takes to charge the capacitor (called the "rise" time, for an oscillating signal) is in the nanosecond range. If we increase capacitance too much, though, then the rise time will become noticeably large, and the "saw" will look more like a triangle.
 
-Spiked capacitor: https://tinyurl.com/24br28bv
+Additionally, the oscillator is tricky to make because, beyond the basics, it matters what components you use. Your breadboard and components will all introduce unwanted interferences (called _parasitics_), and while most times, this is negligible, it has a noticeable effect on the VCO performance. For example, diodes have their own capacitance, which charges when they conduct. When the diode turns off, its parasitic capacitance will compete with your _actual_ capacitor, pulling charge off of it! This results in a "spiked" waveform, which worsens as diode capacitance increases. If it's too large, it will completely kill the oscillation! 
+
+<img src="res/vco-spiked-diode-parasitic.png" height=300 />
+
+_Diode parasitics cause a "spiked" sawtooth waveform. The diode pulls charge from the capacitor when it turns off. [[Falstad]](https://tinyurl.com/2kdza9qe)_
+
+Schottky diodes seem to have higher diode capacitances, and you'll have to check the datasheet to find out how much parasitic capacitance a particular diode will have. The 1N4148 in the BOM is recommended, as it minimizes parasitics a lot; using something like a 1N4007 will make it noticeably bad. Also note that you can increase the capacitor value to make it "stronger" than the diode parasitics, but this is only good up to a point.
 
 
 ### Adding Voltage Control
@@ -963,13 +978,20 @@ So at our typical input voltage of ~500mV, the resistor will only drop ~2mV befo
 _[[Falstad]](https://tinyurl.com/2ngov5ay)_
 
 ### Build Notes From The VCO
-_**Under construction**_
 
-Includes breadboard schematic, picture of breadboard circuit, directions to _slowly_(!) increase voltage. Also notes about logging the input voltages that correspond to some target frequencies; this will be useful in later steps for temperature compensation.
+Again, the components matter — moreso, in fact, with the voltage-controlled oscillator. A BJT allows us to get precise capacitor discharge rates due to the constant current (versus an RC network, which is exponential). However, because we are getting to the point where we'd want to set particular notes predictably, we don't want anythign else pulling current from the capacitor. 
 
-Notes about too-low input voltages causing the cap to charge and stay there.
+All diodes are imperfect, and will conduct a small current in the "wrong" direction when they are "off". If you use a high-leakage diode (check the "reverse current" in the datasheet), the capacitor might noticeably discharge via the diode instead of the transistor. To test this out, double-click on the diode in the Falstad simulation from before, and you'll be able to choose from a few different common diodes. As you change diodes, notice the current in the bottom-right corner of the screen.
 
-Again, using scope probes will change the oscillation frequency, and even allow the cap to discharge without any discharge path! (Through 1M scope probes.) Can use op-amp buffer to observe.
+<img src="res/diode-edit-component.png" height=250 />
+
+_The 1N4148 has ~ (-4)nA reverse current; changing the value to the 1N5711 gives (-315)nA of reverse current! [[Falstad]](https://tinyurl.com/2ngov5ay)_
+
+> Technically, this _should_ be negligible. Not because the current is small (relative to the capacitor and the low frequencies, it may not be), but because the BJT is constantly pulling current to GND — why would it matter if the diode does? We'll just adjust for this in setting the BJT base voltage bounds. In any case, I'm not fully convinced it _doesn't_ matter, so I'm including it here. It's interesting, at the least, and we're already using the 1N4148, so this doesn't change anything we're doing. 
+
+The circuit will only work within a small input range of ~100mV or so, and it will vary based on your particular BJT, ambient temperature, etc. So the 450mV - 550mV recommendation that we've been going by is only a ballpark estimate. For sure, you know that 0.7V is too much, so no need to raise the base voltage that high. But finding the input range can be tricky. 
+
+Here's a tip to help: Think about the fact that the BJT's role is to _discharge_ the capacitor, meaning that if the base voltage is too low, the cap will be "stuck" at a high voltage. If the voltage on the cap (output) suddenly drops lower, you probably passed the input range. Once you find it, **write down the voltages and the frequencies** at which they result! We're going to need these values later, and even though they may shift slightly from moment to moment, it will be extremely helpful to know them for input conditioning and temperature compensation.
 
 
 ### VCO Input Conditioning: Accepting 0-5V
@@ -1053,7 +1075,6 @@ Adding this to the oscillator involves simply buffering the output before passin
 _The oscillator accepts 0-5V CV input. [[Falstad]](https://tinyurl.com/2zd8yexo)_
 
 ### Temperature Compensation
-_**Under Construction**_
 
 The npn BJT which controls the oscillator frequency is _highly_ temperature-dependent: if you put your finger on it, the frequency will rapidly increase as the BJT heats up. In fact, you don't even need to touch it — simply breathe hot air onto the BJT, and the oscillator will fall out of tune!
 
@@ -1063,13 +1084,13 @@ $$I_E \approx I_C \approx I_s e^{\frac{V_{BE}}{V_T}}$$
 
 The thermal voltage is (as the name suggests) a quantity that changes with temperature: $V_T = \frac{kT}{Q(1V)}$ increases with temperature. We might, therefore, expect to see that increasing temperature causes a _decreasing_ current for a given $V_{BE}$. But surprisingly, the opposite occurs. $I_s$ [varies with temperature _cubed_](https://electronics.stackexchange.com/a/615324), causing current to increase with temperature. 
 
-Another way to think about this is: If current goes up when voltage stays the same, then if current stays the same, voltage must decrease. Via simulation at different temperatures, we can discover that a fixed current provides ^[prod-temp]
+Another way to think about this is: If current goes up when voltage stays the same, then if current stays the same, voltage must decrease. Via simulation at different temperatures, we can discover that a fixed current provides [^prod-temp]
 
 $$\frac{\Delta V_{BE}}{\Delta T} = -1.82 \text{mV / °C} \approx -2 \text{mV / °C}$$
 
 This is called the _temperature coefficient_, and it describes how electronics vary their voltages in response to temperature changes.
 
-Correcting for this is difficult, and [many](https://northcoastsynthesis.com/news/exponential-converters-and-how-they-work/) more [complex designs](https://www.schmitzbits.de/expo_tutorial/) exist which attempt to mitigate the effects of temperature on transistor circuits. A  much more intuitive temperature compensation  ^[moritz-temp-compensation] will work for our purposes, though, which we will implement here.
+Correcting for this is difficult, and [many](https://northcoastsynthesis.com/news/exponential-converters-and-how-they-work/) more [complex designs](https://www.schmitzbits.de/expo_tutorial/) exist which attempt to mitigate the effects of temperature on transistor circuits. A  much more intuitive temperature compensation [^moritz-temp-compensation] will work for our purposes, though, which we will implement here.
 
 #### PNP NPN Temperature Compensation
 
@@ -1486,7 +1507,7 @@ In a common-emitter amplifier with op-point $I_C$ = 1mA, we expect that a ±5mV 
 
 _The diff pair with 5mV at the input gives half the current we might expect. [[Falstad]](https://tinyurl.com/2e5tax5f)_
 
-The easy way out is to say, "The interaction of the two amplifiers causes input signal changes to have half the total effect as they would in a single common-emitter amplifier." This is true, but why? Let's start by stating what we _do_ understand. ^[audiophool-diff-amp]
+The easy way out is to say, "The interaction of the two amplifiers causes input signal changes to have half the total effect as they would in a single common-emitter amplifier." This is true, but why? Let's start by stating what we _do_ understand. [^audiophool-diff-amp]
 
 While the current-setting resistor, $R_{tail}$, is not ideal, it is good enough to trust the total current draw is still ≈ 2mA. A 0.1mA change in current would require greater than 50mV change in the emitter node voltage, and this seems unlikely. (One of the bases is tied to 0V GND, so this would cause more than _two_ 18mV jumps in $V_{be}$ — meaning the current would need to change by more than a factor of 4!) Therefore (even if it weren't indicated by the ammeters) we can still safely assume that this circuit is drawing 2mA in total. 
 
@@ -1571,15 +1592,15 @@ Remember that we've been using transistors with edited SPICE models for mathemat
 
 ### Amplifier Build Notes
 
-_**Under Construction**_
-Make the tail resistor big and use large sink voltage range to get a better current source. Think about how the vbe changes in millivolts; the larger the sink voltage magnitude, the less a millivolt change will affect current.
+We've been modeling the amplifier with very high currents! The amplifier will work regardless of whether you use milliamps or microamps, so you can use a smaller current by increasing the tail resistor value if you'd like. Yes, you'll lose gain, but remember that the (first stage) differential pair's job is to allow for _adjustable_ gain, which it will do regardless of the particular $g_m$ range. The differential amplifier (second stage) will provide any make-up amplification that we need. 
 
-For this reason, current will diminish a lot. This is okay, and the amp doesn't need to use a lot of current to be effective. Just use bigger resistors. Very large resistors might introduce more noise, but 50k and u-amp range seems to be fine.
+One advantage of making the tail resistor big, as well as using a large sink voltage (eg. -12V instead of -5V), is that it creates a more reliable current source. Large resistances require a larger voltage change to noticeably affect their current ($I = \frac{V}{R}$). Think about how $V_{be}$ changes in millivolts. The larger the sink voltage magnitude, the less a ±1mV change will affect current through the resistor, and subsequently, through the transistors.
 
-Install a trimmer in the inverting op-amp so that you can adjust the max gain of the amplifier. You want a max-input signal (±5mV) to hit 1Vpp at the output. Or 5Vpp. Depends on what speakers you plug into. Try out the speakers and see what sounds good vs when they distort.
+One final change you might make to the design during implementation is to replace some of the resistors with adjustable resistors ("trimmers"). There are two reasons to do this.
 
-Include implementation in Falstad of actual amp, using un-adjusted SPICE models.
+First, making the op-amp feedback resistor adjustable will allow you to adjust the maximum gain of the amplifier. If your signal is slightly above or below the Vpp level you desire, you can simply turn the trimmer's screw, and adjust the voltage sink range. (Eg. Instead of 0-10V, you might find 0-9.7V works better if your output is slightly too large.) Depending on the speakers you use, you'll likely want to aim for a 1Vpp or 5Vpp signal. Providing more than that will distort, and less means you're missing out on potential volume range. (Try sending a signal from the function generator into the speakers, if you can't find anything in a datasheet. See what sounds good, and when it distorts.)
 
+Secondly, the differential amplifier uses _matched_ components, meaning that each of the two resistors $R_f$ and $R_{in}$ are _pairs_. If one $R_f$ is larger than the other, then your output will be amplified unevenly. You can either test multiple resistors to find two that are close enough (this is what I did — it took measuring ~ 10 resistors to find a decent pairing), or replace one of the two with a trimmer.
 
 
 ## 2.5 The Envelope Generator
@@ -1613,7 +1634,7 @@ _ADSR: Attack, Decay, Sustain, and Release. ADR control time, while S controls a
 ### A Basic AR Envelope
 At its most basic, an attack/release envelope generator should accept CV input which triggers a gate when it goes high (5V). The output signal should rise at a defined rate, hold for the duration of the gate, and fall at a defined rate when the gate returns low.
 
-We've already seen an envelope generator that fulfills these requirements: the low-pass RC filter! ^[moritz-adsr]
+We've already seen an envelope generator that fulfills these requirements: the low-pass RC filter! [^moritz-adsr]
 
 <img src="res/rc-lp-waveforms.png" height=300 />
 
@@ -1815,12 +1836,16 @@ With an "output-high" indicator for "AR envelope has returned low", we can pass 
 _With a single comparator and BJT, we've ensured the DS envelope will always reset between notes. [[Falstad]](https://tinyurl.com/2r2dk4nl)_
 
 ### Build Notes
-_**Under construction**_
-10V comparator instead of 12V because of rail-to-rail not guaranteed
-If you happen to have rr op-amp, feel free to use 12V but I'm going to continue with 10V.
- 
- Sizing resistors: wherever relationships are concerned, need to precisely match. Eg. inverting op-amp could amplify if Rf > Rin. Err on Rf < Rin.
 
+Many op-amps (even those that claim to be "rail to rail") will _not_ provide output that goes all the way to the voltage rails of your system! Sometimes, the comparator won't, either. However, using the parts listed in the BOM, the comparators _will_ get to 12V, while the op-amps will not (~10.7V). 
+
+You can try to get around this by finding an op-amp that will get to the positive rail. At the time of this project's conception, though, ICs are difficult to find. If, for whatever reason, you are unable to find a rail-to-rail op-amp, or simply don't want to, there is an easy solution: _don't make your output 12V!_
+
+If we set up a separate supply at 10V and connect only our comparators to run on this, then their maximum output will be 10V and the op-amp will be able to buffer the signals properly. Of course, in implementation, you wouldn't want to use a separate supply just for your comparators. This is beyond the scope of this guide, but if you wanted to put this on a PCB, I would recommend using voltage regulators to set a 10V power rail. Connect your comparators to this, and you'll be set.
+
+Also, the comparators cannot be powered by ±12V even if you wanted to. Most that I could find used ~ 18V maximum, and 24V will fry them immediately. The op-amps, however, _can_ use ±12V, so that's safe to do. Especially do not connect the negative power terminal of your op-amps to GND, because if they are supposed to buffer a signal which goes "low", they might not be able to pull it to 0V when this is also the supply rail. Using -12V as the supply rail ensures that the op-amp can fully output to true 0V.
+
+Finally, similar to the amplifier, the resistors used throughout this subsystem need to be precisely set. For example, the inverting op-amp could _amplify_, instead of attenuate, if $R_f > R_{in}$. If you had to have unmatched components, you'd want to ensure that you place the larger one as $R_{in}$. In general, if you're not using perfectly-matched resistors, consider on which side of the "error" spectrum you want your results to be.
 
 ## 2.6 System Integration
 Once every subsystem is built, you're ready to connect! Start with the oscillator, and chain inputs and outputs until you reach the speaker output buffer. Check for known inputs and outputs of various subcircuits as you go. If something doesn't work, trace back to the last "known" test point and you should be able to diagnose any issues.
@@ -1830,16 +1855,21 @@ Give every breadboard a solid power supply connection, or else the individual su
 It's a scary process, but you should be able to get a full synthesizer system working pretty quickly! Here's a [YouTube video](https://youtu.be/DtJC3cJHXis) showing the system, and what yours might look and sound like. Good luck!
 
 ## 3.0 Future Work
-### Additional Oscillators & Noise
+_**Under Construction**_
+
+Still need to add all of this. The document is littered with "future work" suggestions, so I need to Ctrl+F and add those in here.
 
 ### Additional Modules
 > Low frequency oscillators (LFOs), white noise generators, ring modulators, and glides (portamento). LFOs are used to modulate the control voltages to the other modules (VCO, VCF, and VCA) to provide tremolo or vibrato effects. White noise generators can be used as additional signal source, usually mixed with the output of the VCO to add the whoosh of a wind instrument or the the crash of a cymbal or drum. Ring modulators are basically analog multipliers that create very weird effects, but are important for synthesizing things like bell sounds. Glides are used on the inputs of VCOs to provide trombone-like slides from note to note. [^nate]
 
 # References
-[^mit_syw]: So You Want to Build a Synthesizer MIT http://web.mit.edu/klund/www/weblatex/node2.html
-[^pc_eurorack]:Perfect Circuit Eurorack https://www.perfectcircuit.com/signal/eurorack-line-level
-[^nate]: Nate Hatch Fender Component Selection https://www.youtube.com/watch?v=FacBtCPez2U&t=7s
-[^pcheung]: Pcheung's Aero notes
+[^mit_syw]: From [So You Want to Build a Synthesizer MIT](http://web.mit.edu/klund/www/weblatex/node2.html)
+[^pc_eurorack]: (Perfect Circuit Eurorack](https://www.perfectcircuit.com/signal/eurorack-line-level)
+[^nate]: See Nate Hatch's [tutorial on component selection](https://www.youtube.com/watch?v=FacBtCPez2U&t=7s)
+[^pcheung]: See [Peter Cheung's](http://www.ee.ic.ac.uk/pcheung/) excellent [Aero notes on BJTs](http://www.ee.ic.ac.uk/pcheung/teaching/aero2_signals&systems/transistor%20circuit%20notes.pdf) 
 [^merberich]: Michael Erberich's AES Microcontroller Workshop https://merberich.github.io/aes_microcontroller_workshop/#electronics-fundamentals
 [^audiophool-diff-amp]: For an alternative explanation of differential pair, I highly recommend [The Audiophool's explanation](https://youtu.be/Mcxpn2HMgtU)! It's an alternative way to look at the diff pair's theory of operation.
 [^moritz-adsr]: The core of the AR envelope generator is derived from Moritz Klein in his ["ADSR-ish" video](https://youtu.be/aGFb7JbTdNU). However, the design departs from Moritz's implementation after that.
+[^prod-temp]: From Professor Prodanov's EE308 lecture notes, Lec. 2.
+[^moritz-temp-compensation]: He's certainly not the first person to use this technique, but I got this idea from Moritz Klein's video on [temperature compensation](https://youtu.be/dd1dws6pSNo)
+[^audiophool-diff-amp]: Check out this video by the AudioPhool called [Differential Amplifiers Made Easy](https://youtu.be/Mcxpn2HMgtU)
