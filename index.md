@@ -14,6 +14,7 @@ puppeteer:
 
 <h1 align="center">AES Synthesizer System Design</h1>
 
+Note: This project is maintained through Github and updated by the Cal Poly Audio Engineering Society. Check [here](https://github.com/algoldst/thesis) for the latest version.
 
 # Table of Contents
 - [0.0 The Goal](#00-the-goal-and-what-to-expect)
@@ -34,7 +35,7 @@ puppeteer:
 - [3.0 Future Work](#30-future-work)
 
 # 0.0 The Goal (And What To Expect)
-Building a synthesizer is difficult. I'm not saying this to scare you away, but to prepare you: this will be a challenge. That said, it will be an extremely rewarding challenge, and a great accomplishment. Synthesizers combine knowledge from across an electrical engineering education, and building one requires applying your knowledge in a way that will solidify your understanding of electronics and make you a far better engineer. Of course, any difficult journey deserves proper motivation, so this is what you can expect from this project:
+Building a synthesizer is difficult. I'm not saying this to scare you away, but to prepare you: this will be a challenge. That said, it will be an extremely rewarding challenge, and a great accomplishment. Synthesizers combine knowledge from across an electrical engineering education, and building one requires applying your knowledge in a way that will solidify your understanding of electronics and make you a far better engineer. Of course, any difficult journey deserves proper motivation, so here is what you can expect from this project.
 
 By the end of this series, you will have a synthesizer consisting of four modules: an **oscillator**, **amplifier**, **filter**, and **envelope generator (ADSR)**.
 
@@ -150,9 +151,13 @@ We will introduce active elements as we progress, but there are some basics whic
 
 <img src="res/diode.png" height=250 />
 
+_[[Source]](https://www.jameco.com/Jameco/workshop/Howitworks/different-types-of-diodes-and-how-they-work.html)_
+
 **Integrated circuits** (ICs) describe a general class of small devices which contain complex circuits within. Common ICs are operational amplifiers (op-amps), comparators, voltage regulators, and many other components. We will introduce all of these as we go.
 
-<img src="res/ics.png" height=250 />
+<img src="res/ics.jpg" height=250 />
+
+_[[Source]](https://en.wikipedia.org/wiki/Integrated_circuit_)
 
 ### Schematics, Simulation, Build, and Test
 Electrical circuits are documented in diagrams known as _schematics_,  which use common symbols for different types of circuit elements. Lines indicate wire connections between elements. Unless otherwise stated, wires are assumed to have 0 resistance, and therefore all points connected by wires (called _nodes_) share the same voltage. Wire connections can also be implied by nodes with the same name. Elements which are connected end-to-end share a single node in common and are called _series_-connected, while elements which share two nodes are called _parallel_-connected. (Two parallel components are often denoted in shorthand with "//", eg. R1 // R2.)
@@ -161,13 +166,17 @@ Electrical circuits are documented in diagrams known as _schematics_,  which use
 
 Electricity is provided via **sources**, which are usually controllable and output either voltage or current. Nodes in the circuit which are explicitly 0V are considered "grounded" and are denoted by the GND symbol.
 
-<img src="res/active-sources-and-gnd.png" height=300 />
+<img src="res/sources-and-ground.png" height=300 />
 
 Most schematic design is done via programs such as Altium, Autodesk EAGLE, or KiCad. Circuit simulation is typically done with a SPICE program. There are many, but we will be using [LTSpice](https://www.analog.com/en/design-center/design-tools-and-calculators/ltspice-simulator.html) and [Falstad](https://www.falstad.com/circuit/) simulator, which are both free. 
 
-Schematics do not indicate physical orientation or placement of parts in 3D space. Translating schematics to a physical design is referred to as _layout_. Manufacturing printed circuit boards (PCBs) require formal layout in programs that support physical design, but such tools are not strictly necessary in order to implement a circuit. Instead, electronic "breadboards" allow for rapid prototyping by providing a convenient structure to connect circuit elements together. Breadboards are not without drawbacks; in particular, breadboarding a circuit introduces electrical non-idealities that can alter the circuit's behavior; however, they are a powerful tool to design and learn with, and will form the basis of this project's synthesizer implementation.
+Schematics do not indicate physical orientation or placement of parts in 3D space. Translating schematics to a physical design is referred to as _layout_. Manufacturing printed circuit boards (PCBs) require formal layout in programs that support physical design, but such tools are not strictly necessary in order to implement a circuit. Instead, electronic "breadboards" allow for rapid prototyping by providing a convenient structure to connect circuit elements together. Breadboards are not without drawbacks; in particular, breadboarding a circuit introduces electrical non-idealities that can alter the circuit's behavior; however, they are a convenient tool to quickly design and test with, and will form the basis of this project's synthesizer implementation.
 
-<img src="res/breadboards.jpg" height=450 />
+<img src="res/breadboards-1.png" height=250 />
+
+<img src="res/breadboards-2.png" height=250 />
+
+_Source: Cal Poly EE 143 Lab Manual_
 
 Because it is not possible to observe electrons as they flow through a circuit, we need tools to verify our breadboard circuit implementations throughout the build process. This can be done via tools which measure voltage (oscilloscopes, voltmeters), current (ammeters), and resistance (ohmmeters). A basic digital multimeter (DMM) can provide this functionality and more. (See the [Bill-of-Materials]() for a recommendation.) Generally speaking, measurement tools act in an ideal fashion to avoid altering a circuit's function. Certain simulation software, such as Falstad, mimics these tools to provide additional information during simulation.
 
@@ -1045,6 +1054,64 @@ _The oscillator accepts 0-5V CV input. [[Falstad]](https://tinyurl.com/2zd8yexo)
 
 ### Temperature Compensation
 _**Under Construction**_
+
+The npn BJT which controls the oscillator frequency is _highly_ temperature-dependent: if you put your finger on it, the frequency will rapidly increase as the BJT heats up. In fact, you don't even need to touch it — simply breathe hot air onto the BJT, and the oscillator will fall out of tune!
+
+Recall that the Ebers-Moll equation for a forward-active BJT gives:
+
+$$I_E \approx I_C \approx I_s e^{\frac{V_{BE}}{V_T}}$$
+
+The thermal voltage is (as the name suggests) a quantity that changes with temperature: $V_T = \frac{kT}{Q(1V)}$ increases with temperature. We might, therefore, expect to see that increasing temperature causes a _decreasing_ current for a given $V_{BE}$. But surprisingly, the opposite occurs. $I_s$ [varies with temperature _cubed_](https://electronics.stackexchange.com/a/615324), causing current to increase with temperature. 
+
+Another way to think about this is: If current goes up when voltage stays the same, then if current stays the same, voltage must decrease. Via simulation at different temperatures, we can discover that a fixed current provides ^[prod-temp]
+
+$$\frac{\Delta V_{BE}}{\Delta T} = -1.82 \text{mV / °C} \approx -2 \text{mV / °C}$$
+
+This is called the _temperature coefficient_, and it describes how electronics vary their voltages in response to temperature changes.
+
+Correcting for this is difficult, and [many](https://northcoastsynthesis.com/news/exponential-converters-and-how-they-work/) more [complex designs](https://www.schmitzbits.de/expo_tutorial/) exist which attempt to mitigate the effects of temperature on transistor circuits. A  much more intuitive temperature compensation  ^[moritz-temp-compensation] will work for our purposes, though, which we will implement here.
+
+#### PNP NPN Temperature Compensation
+
+We know that our oscillator frequency increases with temperature. This implies that the capacitor is being drained more quickly on each cycle, meaning that BJT collector current must be increasing with temperature. This is consistent with what we just learned about BJTs and temperature-dependence: as temperature rises and $V_{BE}$ remains constant, current increases via $I_S$. 
+
+The BJT temperature coefficient gives constant current for -1.82mV / °C (≈ -2mV / °C). By this logic, if we could lower the npn's base voltage proportionally as temperature increases, this would keep the VCO in tune. This can be achieved with a _pnp BJT_.
+
+Think of the _pnp_ BJT as the mirror image of an _npn_. The theory of operation is the same, but now it's the emitter-base voltage (not the emitter-base voltage — the sign flips) which sets the current. Instead of the collector being the highest voltage, it's the lowest; instead of the emitter being the lowest voltage, it's the highest. 
+
+<img src="res/npn-pnp-biasing.png" height=200 />
+
+_The npn and pnp BJTs are "mirrored" in their connections, but work the same: the magnitude of the base-emitter / emitter-base voltages set the current._
+
+The good news is that, although npn and pnp BJTs are connected in opposite ways, both "flavors" of transistor increase their current with temperature. This gives us a way to cascade them which counteracts their temperature dependence.
+
+<img src="res/pnp-npn-cascade.gif" height=300 />
+
+_Cascading a pnp and npn. [[Falstad]](https://tinyurl.com/2owfmocd)_
+
+Let's assume forward-active mode; then both BJTs will try to maintain a ~0.6V drop across their base-emitter junction; therefore, $V_{BE,npn} = V_{EB,pnp} \approx 0.6\text{V}$. (We'll justify this later.)
+
+An input of 0V at the pnp base, then, causes its emitter to be 0.6V. This places the npn base at 0.6V also, and therefore _its_ emitter is at 0V (GND). This creates a symmetric voltage "rise" (from pnp base to emitter) and "fall" (from npn emitter to base). 
+
+Notice how the 10kΩ resistor effectively "sets" current: with its bottom node at ~ 0.6V, there must be $I = \frac{12V - 0.6V}{10k\Omega} \approx 1\text{mA}$ through it. Even if the PNP base-emitter voltage varies a lot (for BJTs, at least... eg. ±100mV), a 1mA current is basically guaranteed through the PNP. (Remember that base current is a tiny fraction of collector current, so the NPN can only draw a negligible amount.) Additionally, we've tied the collector to -12V, ensuring that the transistor will remain out of saturation. This is what guaranteed us our earlier assumption of forward-active mode.
+
+We can then allow the PNP base voltage to fall slightly: for example, to -100mV. Because the transistor is forced to allow 1mA of current (due to the resistor at the emitter), it must maintain the appropriate $V_{BE}$ of 0.6V. However, this sets the NPN base voltage to (-0.1V + 0.6V) = 0.5V. With the NPN emitter fixed at 0V, this lowers its $V_{BE}$ and causes less current to flow. This operation continues down to the lowest range that we might reasonably want for the PNP base voltage, around -0.6V; this places the NPN base at 0V, and therefore the transistor enters cutoff.
+
+But how does this mitigate temperature effects?? 
+
+Recall that as the NPN heats up, it conducts more current and the VCO frequency increases.
+
+We've set the PNP base voltage, so there's no way for that to change with temperature. Similar logic holds for the NPN emitter's GND connection. We noted earlier how the resistor sets a _roughly_ constant current, which the PNP accomodates with an appropriate $V_{EB}$. But the "appropriate" $V_{EB}$ is going to be different depending on temperature! If we assume it's 600mV at room temperature (20°C), then with constant current, at 21°C it must be ~ 598mV. As the PNP heats up, its $V_{EB}$ _must_ shrink, meaning its emitter voltage must fall. Because PNP emitter and NPN base are tied, this lowers the NPN's $V_{BE}$, decreasing its current back to its "room-temperature" original value.
+
+This action isn't perfect — in particular, the NPN "pulls up" more than the PNP can "pull down". Breathe on both, and the frequency will increase slightly (due to the NPN) before the PNP is strong enough to counteract it. But it's sufficient to keep the circuit _decently_ in-tune, enough for our purposes.
+
+#### Adding the PNP-NPN Cascade
+For our VCO to work, the NPN base voltage must be between ~[450mV, 550mV]. We can achieve this by placing the PNP base voltage between [-0.250V, -0.150V]. We can redo our CV input biasing to output within this range, which allows our oscillator to work again.
+
+<img src="res/vco-pnp-npn-connection.png" height=300 />
+
+_Temperature-compensated VCO circuit. [[Falstad]](https://tinyurl.com/2pq3bz2p)_
+
 
 ### Oscillator Build Notes
 
