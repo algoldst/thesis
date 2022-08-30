@@ -187,7 +187,7 @@ Because it is not possible to observe electrons as they flow through a circuit, 
 Certain simulation software, such as Falstad, mimics these tools to provide additional information during simulation.
 
 ### Series and Parallel Connections
-Similar circuit components arranged in series or parallel combine by adding or scaling, depending on the component. ^[series-parallel] Resistors and inductors add in series and scale in parallel, whereas capacitors combine in an opposite way, adding in parallel and scaling in series. 
+Similar circuit components arranged in series or parallel combine by adding or scaling, depending on the component. [^series-parallel] Resistors and inductors add in series and scale in parallel, whereas capacitors combine in an opposite way, adding in parallel and scaling in series. 
 
 Scaling of $n$ components follows a formula $X_{total} = (1/X_1 + 1/X_2 + ... + 1/X_n)^{-1}$. When only two elements are involved, this formula reduces to $X_{total} = \frac{X_1 X_2}{X_1 + X_2}$. The following figure shows analytically-equivalent circuit element configurations, with formulas relating their values below.
 
@@ -546,7 +546,7 @@ Because of its similarity to the low-pass RC filter, we have most of the intuiti
 
 <img src="res/rc-hp-schematic.png" height=250 />
 
-The following output shows the high-pass filter's response to a 1V square wave input. The key to understanding it is making sense of a series-connected capacitor. Recall that a capacitor cannot instantaneously change the voltage across its parallel plates. Therefore, if the voltage on one side of the capacitor changes, the other side of the capacitor must also change by an equal amount. In this way, a capacitor might be thought of as similar to a flexible membrane or wall — while charges cannot pass _through_ it, any changes in pressure on one side are felt on the other. ^[moritz-filter] 
+The following output shows the high-pass filter's response to a 1V square wave input. The key to understanding it is making sense of a series-connected capacitor. Recall that a capacitor cannot instantaneously change the voltage across its parallel plates. Therefore, if the voltage on one side of the capacitor changes, the other side of the capacitor must also change by an equal amount. In this way, a capacitor might be thought of as similar to a flexible membrane or wall — while charges cannot pass _through_ it, any changes in pressure on one side are felt on the other. [^moritz-filter] 
 
 Let's walk through the step response to understand how this behavior creates the step response shown. The illustrations below show how charges near the capacitor's "output-side" plate can be understood throughout this process.
 
@@ -1950,9 +1950,9 @@ Still need to add all of this. The document is littered with "future work" sugge
 
 # References & Notes
 [^mit_syw]: From [So You Want to Build a Synthesizer MIT](http://web.mit.edu/klund/www/weblatex/node2.html)
-[^pc_eurorack]: (Perfect Circuit Eurorack](https://www.perfectcircuit.com/signal/eurorack-line-level)
+[^pc_eurorack]: [Perfect Circuit Eurorack](https://www.perfectcircuit.com/signal/eurorack-line-level) gives some introduction to Eurorack.
 [^pcheung]: See [Peter Cheung's](http://www.ee.ic.ac.uk/pcheung/) excellent [Aero notes on BJTs](http://www.ee.ic.ac.uk/pcheung/teaching/aero2_signals&systems/transistor%20circuit%20notes.pdf) 
-[^merberich]: Michael Erberich's AES Microcontroller Workshop https://merberich.github.io/aes_microcontroller_workshop/#electronics-fundamentals
+[^merberich]: Sourced from [Michael Erberich's AES Microcontroller Workshop](https://merberich.github.io/aes_microcontroller_workshop/#electronics-fundamentals)
 [^audiophool-diff-amp]: For an alternative explanation of differential pair, I highly recommend [The Audiophool's explanation](https://youtu.be/Mcxpn2HMgtU)! It's an alternative way to look at the diff pair's theory of operation.
 [^moritz-adsr]: The core of the AR envelope generator is derived from Moritz Klein in his ["ADSR-ish" video](https://youtu.be/aGFb7JbTdNU). However, the design departs from Moritz's implementation after that.
 [^prod-temp]: From Professor Prodanov's EE308 lecture notes, Lec. 2.
