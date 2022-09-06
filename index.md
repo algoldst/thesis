@@ -19,10 +19,9 @@ Note: This project is maintained through Github and updated by the Cal Poly Audi
 # Table of Contents
 - [0.0 The Goal](#00-the-goal-and-what-to-expect)
 - [1.0 Fundamentals](#10-fundamentals)
-	- [Sound & Audio Fundamentals
-	](#sound--audio-fundamentals)
-	- [Basic Waveforms]()
-	- [Electronics](#electronics)
+	- [Sound & Audio Fundamentals](#11-sound--audio-fundamentals)
+	- [Basic Waveforms](basic-waveforms)
+	- [Electronics](#12-electronics)
 - [2.0 The Synthesizer](#20-the-synthesizer)
 	- [2.0.1 Bill of Materials](#201-bill-of-materials-bom)
 	- [2.0.2 System Overview](#202-system-overview)
@@ -72,7 +71,7 @@ $$T = \frac{1}{f} \text{ [s]} \leftrightarrow f = \frac{1}{T} \text{ [Hz]}$$
 
 The range of human hearing spans [20Hz - 20kHz](https://www.ncbi.nlm.nih.gov/books/NBK10924/#:~:text=Humans%20can%20detect%20sounds%20in,to%2015%E2%80%9317%20kHz.), corresponding to an oscillation period between 50μs - 50ms long. For reference, the human voice spans a fundamental frequency range of approximately [80Hz - 300Hz](https://flypaper.soundfly.com/produce/eqing-vocals-whats-happening-in-each-frequency-range-in-the-human-voice/#:~:text=The%20Frequencies%20We%20Can%20Hear&text=During%20a%20conversation%2C%20the%20fundamental,from%20165%20to%20255%20Hz.).
 
-## Basic Waveforms
+### Basic Waveforms
 The simplest sonic waveform is a sinusoid: a pure oscillation at a single frequency. As atoms are to matter, sinusoids are the most basic building block with which all other sounds can be created. Layered sinusoids are typically perceived as a single sound, albeit much more complex, and conversely, every sound can be represented as a summation of individual sinusoids, including common waveforms such as squares, triangles, and sawtooths. 
 
 <img src="res/sine.png" height=100 />
@@ -99,7 +98,7 @@ As mentioned earlier, sinusoids have only one harmonic (the fundamental). While 
 
 
 
-## Electronics
+## 1.2 Electronics
 
 Electronics is the discipline of using charge to achieve engineering goals by use of circuits.[^merberich] What we call "electricity" is, more formally, the presence and movement of charge through conductive paths. 
 
@@ -182,7 +181,7 @@ Translating schematics to a physical design is referred to as _layout_. Formal t
 
 _[[Source]](https://computers.tutsplus.com/tutorials/how-to-use-a-breadboard-and-build-a-led-circuit--mac-54746)_
 
-Because it is not possible to observe electrons as they flow through a circuit, we need tools to verify our breadboarded circuit implementations throughout the build process. This can be done via tools which measure voltage (oscilloscopes, voltmeters), current (ammeters), and resistance (ohmmeters). A basic digital multimeter (DMM) can provide this functionality and more. (See the [Bill-of-Materials]() for a recommendation.) Generally speaking, measurement tools act in an ideal fashion to avoid altering a circuit's function. 
+Because it is not possible to observe electrons as they flow through a circuit, we need tools to verify our breadboarded circuit implementations throughout the build process. This can be done via tools which measure voltage (oscilloscopes, voltmeters), current (ammeters), and resistance (ohmmeters). A basic digital multimeter (DMM) can provide this functionality and more. (See the [Bill-of-Materials](#202-bill-of-materials-bom) for a recommendation.) Generally speaking, measurement tools act in an ideal fashion to avoid altering a circuit's function. 
 
 Certain simulation software, such as Falstad, mimics these tools to provide additional information during simulation.
 
@@ -259,7 +258,7 @@ Power sources are usually DC, set to constant values such as ±12V to supply cir
 
 # 2.0 The Synthesizer
 
-## 2.0.3 Roadmap
+## 2.0.1 Roadmap
 
 A system build has a lot of steps, but it becomes a lot more manageable when broken into tasks. Here is a list of goals we'll need to tackle along the way, in order. This will let you track your progress as you get closer to a complete build.
 
@@ -312,11 +311,42 @@ A system build has a lot of steps, but it becomes a lot more manageable when bro
 
 
 
-## 2.0.1 Bill of Materials (BOM)
+## 2.0.2 Bill of Materials (BOM)
 
+This curriculum costs approximately \$20 - \$50 to complete, depending on pre-existing equipment (e.g. breadboards, leads, component boxes). Access to lab equipment (e.g. variable power supplies, function generators, oscilloscopes) is assumed.
 
+Most parts below are recommendations, with the exception of ICs and diodes. Potentiometers preference is variable according to student design. 
 
-## 2.0.2 System Overview
+Students should not expect to use all of these parts, and will likely have extras at the end. Redundancies are also included with the expectation that some parts will be substituted during design, or broken in the process of experimentation.
+
+- [3] Breadboards (830 point) [[Recommendation]](https://www.amazon.com/ELEGOO-Breadbaord-Kit/dp/B0B2W64YG4)
+- [2] Breadboards (400 point) [[Recommendation]](https://www.amazon.com/ELEGOO-Breadbaord-Kit/dp/B01EV640I6?th=1)
+- [1] Box of Breadboard Leads + Jumpers [[Recommendation]](https://www.amazon.com/gp/product/B07WC3YKGQ/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1)
+- [1] Resistor Box [[Recommendation]](https://www.banggood.com/1460pcs-76-Kinds-1R-1M-Value-5-pencent-1-or-4W-Metal-Film-Resistor-Assorted-Kit-20pcs-Each-Value-with-Plastic-Case-p-1705399.html)
+- [1] Capacitor Box [[Recommendation]](https://usa.banggood.com/450pcs-15-Value-Monolithic-Capacitor-Set-50v-Multi-layer-Assortment-Box-10pf-To-100nf-Electronic-Components-Capacitor-Kit-p-1589675.html)
+- [5] TI TLC3702CP Comparator IC [[DigiKey]](https://www.digikey.com/en/products/detail/texas-instruments/TLC3702CP/277486)
+- [10] TI LM358P Op-Amp [[DigiKey]](https://www.digikey.com/en/products/detail/texas-instruments/LM358P/277042)
+- [1] Matched NPN Array. Recommendations:
+  - [1] THAT 340P14-U Matched PNP NPN Array [[Mouser]](https://www.mouser.com/ProductDetail/THAT/340P14-U?qs=9Udfh7QmL4v%252BNZRbg%252BkVYQ%3D%3D)
+  - [1] AS3046 Matched NPN Array [[ElectricDruid]](https://electricdruid.net/product/as3046-matched-transistor-array/)
+- [5] OnSemi KSP2222ATA NPN BJT [[Digikey]](https://www.digikey.com/en/products/detail/onsemi/KSP2222ATA/1047392)
+- [5] OnSemi KSP2907ACTA PNP BJT [[DigiKey]](https://www.digikey.com/en/products/detail/onsemi/KSP2907ACTA/4553046)
+- [5] 1N4148 Diode [[DigiKey]](https://www.digikey.com/en/products/detail/onsemi/1N4148/458603)
+- [8] 9mm "Alpha B" Linear Potentiometers [[from Tubes & More]](https://www.tubesandmore.com/products/potentiometer-alpha-linear-9mm-vertical)
+  - [4] 10kΩ
+  - [4] 100kΩ
+- Trimmer Potentiometers
+  - [5] 10kΩ Trimmer Potentiometers (25 turns) [[Tayda]](https://www.taydaelectronics.com/10k-ohm-trimmer-potentiometer-cermet-25-turns-3296w.html)
+  - [5] 10kΩ [[DigiKey]](https://www.digikey.com/en/products/detail/kyocera-avx/601030/10491403)
+  - [5] 100kΩ [[DigiKey]](https://www.digikey.com/en/products/detail/kyocera-avx/601040/10491370)
+- [1] MJ-3536 3.5mm Mono Connector Jack [[DigiKey]](https://www.digikey.com/en/products/detail/cui-devices/MJ-3536N/281264)
+
+Optional test equipment:
+
+- Digital Multimeter (DMM) [[Recommendation]](https://www.amazon.com/gp/product/B07H3TQFZV)
+  - Should be able to measure transistor hFE
+
+## 2.0.3 System Overview
 
 On any synthesizer, we want the core functionality to create a pitch, change its volume, and shape the sound (or "timbre"). This leads every synthesizer to be made up of at least three basic subsystems:
 
@@ -366,7 +396,7 @@ The _final_ output stage of our synth will be ready for a speaker to play, but t
 
 <img src="res/speaker-buffer-falstad.png" height=300 />
 
-_[Speaker buffer schematic. Notice that input is shifted vertically, but the output is symmetric about 0V, making it safe for a speaker to play. [Falstad]](https://tinyurl.com/22qtc32k)_
+_Speaker buffer schematic. Notice that input is shifted vertically, but the output is symmetric about 0V, making it safe for a speaker to play. [[Falstad]](https://tinyurl.com/22qtc32k)_
 
 We haven't explored filters, op-amps, or negative feedback yet, so don't expect to understand this circuit right away. (After we build an oscillator, though, you'll understand it completely.) For now, building the circuit and testing it using lab instruments will be challenging enough if it's your first circuit, so we'll use this as an opportunity to get familiar with building circuits, breadboarding, and troubleshooting. 
 
@@ -423,12 +453,12 @@ You're ready to listen to signals!
 
 > Given that synthesizer signal flow originates with the oscillator, it might seem that this is the best place to start. For our system design, though, we'll want to start with something simpler which lays the groundwork for more complex subsystems. The filter of a synthesizer represents an excellent starting point. As we build the filter, we will become familiar with electronics fundamentals and principles which will apply to future subsystem development, and even future system design.
 
-With the exception of sine waves, most waveforms produced by synthesizers, such as triangle, square, and sawtooth waves, are rich in harmonic content — alter the harmonics, and the sound will change. (See [sound fundamentals]() to see how this works.)   Our oscillator will produce sawtooth waves, which have both even and odd harmonics.
+With the exception of sine waves, most waveforms produced by synthesizers, such as triangle, square, and sawtooth waves, are rich in harmonic content — alter the harmonics, and the sound will change. (See [sound fundamentals](#11-sound--audio-fundamentals) to see how this works.)   Our oscillator will produce sawtooth waves, which have both even and odd harmonics.
 
 Many alterations to a signal are possible, including adding harmonics, changing their relative intensities, shifting their frequencies, and more; however, the simplest effect we can apply to a basic waveform is that of _subtractive_ synthesis — removing harmonic content to change a sound. Filtering is one technique to achieve subtractive manipulation, where the signal passes through a filter that removes some harmonics while allowing others to pass through. In this module, we will implement two basic filters, a high-pass and low-pass filter, by exploring a fundamental electrical circuit called an RC filter.
 
 ### The RC Low-Pass Filter
-The figure below shows the schematic for an RC high-pass and low-pass filter. Consisting of only a single resistor and capacitor, RC filters are extremely easy to implement. They can be understood farily quicly by developing some intuitions about the behavior of each component. 
+The figure below shows the schematic for an RC high-pass and low-pass filter. Consisting of only a single resistor and capacitor, RC filters are extremely easy to implement. They can be understood fairly quicly by developing some intuitions about the behavior of each component. 
 
 <img src="res/filters-rc-lphp-schematic.png" height=300 />
 
@@ -490,7 +520,7 @@ where $Q$ = the amount of charge, in Coulombs. Notice that the ratio $Q/C$ indic
 
 Therefore, the capacitor's charging speed depends on the values of both circuit elements: the capacitor's capacitance, and the resistor's resistance. Interestingly, it does _not_ depend on the voltage applied. While it seems like higher input voltages would take more time to be reached, the current will also be higher due to the larger potential difference. As a result, capacitor charging is only dependent on the values of $R$ and $C$. The **time constant** $\tau$ is defined as $\tau=RC$, and as our simulation shows, 5 time constants $(5*\tau)$ is the amount of time required to fully charge or discharge an RC filter's output. The formulas describing this relationship are:
 
-$$\text{Charing: } V_C = V_{in} (1 - e^{-t/\tau})$$
+$$\text{Charging: } V_C = V_{in} (1 - e^{-t/\tau})$$
 
 $$\text{Discharging: } V_C = V_{in} e^{-t/\tau}$$
 
@@ -498,7 +528,7 @@ The simulation below shows the low-pass RC step response in full. Open the link 
 
 <img src="res/rc-lp-falstad.gif" height=300 />
 
-_Visualizing the step response of an RC low-pass filter. [[Click for an interactive Falstad simulation!]](https://tinyurl.com/2mpry67m)_
+_Visualizing the step response of an RC low-pass filter. [[Click for an interactive Falstad simulation!]](https://tinyurl.com/2ne9fcw5)_
 
 #### Filtering A Square Wave
 Remember that an ideal square wave is [a sum of odd sinusoid harmonics](https://linsysneuro.wordpress.com/2013/03/13/adding-sine-waves/).
@@ -524,7 +554,7 @@ _Increasing the square wave frequency gives the capacitor too little time to cha
 
  In other words, high frequencies don't have enough time to change the output voltage much, attenuating their power. 
  
- Changing the charging time is possible through $R$ and $C$ (via $\tau = RC$), so we can adjust which frequencies are noticeably attenuated by adjusting these values. The filter's "cutoff" frequency, where it reduces harmonic content to 70.7% (or more specifically, by -3dB or $\frac{1}{\sqrt{2}})$, is determined by:
+ Changing the charging time is possible through $R$ and $C$ (via $\tau = RC$), so we can adjust which frequencies are noticeably attenuated by adjusting these values. The filter's "cutoff" frequency, where it reduces harmonic content to 70.7% (or $\frac{1}{\sqrt{2}})$, is determined by:
 
 $$f_c = \frac{1}{2\pi R C} \text{ [Hz]}$$
 
@@ -534,7 +564,7 @@ It's difficult to see the cutoff frequency with a square wave because it contain
 
 _This low-pass filter has a cutoff frequency of 159Hz, causing an output of 707mVpp. [[Falstad]](https://tinyurl.com/2pe8cph9)_
 
-While we might ideally like this cutoff to allow everything below 159Hz through and block everything above, this is impossible. (This is called a "brick-wall" or "ideal" filter.) Our filter is called a "1st-order" filter, meaning that after the -3dB cutoff, signal magnitude drops by -6dB for every doubling in pitch (an octave). This is acceptable for our purposes, although note that higher-order filters are possible and would be an excellent initial upgrade to pursue [once this synth build is complete]().
+While we might ideally like this cutoff to allow everything below 159Hz through and block everything above, this is impossible. (This is called a "brick-wall" or "ideal" filter.) Our filter is called a "1st-order" filter, meaning that after the -3dB cutoff, signal magnitude drops by -6dB for every doubling in pitch (an octave). This is acceptable for our purposes, although note that higher-order filters are possible and would be an excellent initial upgrade to pursue [once this synth build is complete](#30-future-work).
 
 <img src="res/brickwall-orders.gif" height=300 />
 
@@ -554,9 +584,9 @@ Before any input is connected, we assume the capacitor has 0V across it. All nod
 
 <img src="res/hp-cap1.png" height=200 />
 
-_Time is denoted by the vertical blue line — we are currently looking at the circuit before input is applied. Charges (purple) are drawn on the right side only for simplicity, but exist throughout._
+_Time is denoted by the vertical blue line, with time moving forward from left to right — we are currently looking at the circuit before input is applied. Charges (purple) are drawn on the right side only for simplicity, but exist throughout._
 
-At the moment we connect 1V at the input, the voltage at the capacitor's input jumps too. Think of this as the capacitor experiencing increased pressure at its input. In order for the capacitor to maintain 0V across it, it must also exert 1V "pressure" on everything to the right of it. This causes the initial "spike" seen at the output. The output voltage is now at higher pressure, establishing a 1V pressure difference across the resistor and causing current flow to ground. 
+At the moment we connect 1V at the input, the capacitor experiences increased pressure at its input. In order for the capacitor to maintain 0V across it, it must also exert 1V "pressure" on everything to the right of it. This causes the initial "spike" seen at the output. The output voltage is now at higher pressure, establishing a 1V pressure difference across the resistor and causing current flow to ground. 
 
 <img src="res/hp-cap2.png" height=200 />
 
@@ -661,7 +691,7 @@ Perhaps confusingly, to allow all frequencies to pass through, the low-pass filt
 
 <img src="res/fabfilter-eq.png" height=450 />
 
-_A high low-pass cutoff frequency + low high-pass cutoff frequency allows all frequency content through undisturbed. [[[Source]](https://heroic.academy/how-to-mix-music-mixing-guide-part-3/)_
+_A high low-pass cutoff frequency + low high-pass cutoff frequency allows all frequency content through undisturbed. [[Source]](https://heroic.academy/how-to-mix-music-mixing-guide-part-3/)_
 
 
 ### Build Notes From The Filter
@@ -680,7 +710,7 @@ Also, recall that the simulations eventually "flipped" the sliders so that "high
 
 Beyond a particular frerquency, you might not hear a very noticeable effect from low-pass filtering. This leaves the question to you: how much are you willing to trade sensitivity for filter cutoff range? Large potentiometers will give you a wide range of cutoff frequencies, but also make it more difficult to control this via a fixed potentiometer knob. Conversely, smaller potentiometers and the placement of fixed series resistors will limit your cutoff range; however, this makes it easier to move the cutoff precisely. The sensitivity and cutoff range are yours to determine — use your eyes (oscilloscope) and ears to find the range that works for you.
 
-You can use LTSpice to simulate filter frequency response. This is not something that Falstad is designed to handle well, because frequency response is not a time-domain simulation / analysis. Using LTSpice is beyond the scope of this guide, but this is what the final LT schematic should look like to do a .AC frequency simulation.
+You can use LTSpice to simulate filter frequency response. This is not something that Falstad is designed to handle well, because frequency response is not a time-domain simulation / analysis. Using LTSpice is beyond the scope of this guide, but this is what the final LT schematic should look like to do a ".AC" frequency simulation.
 
 <img src="res/filters-lt-ac-sim.png" height=300 />
 
@@ -700,7 +730,7 @@ The oscillator is the core of any synthesizer, generating periodic signals that 
 | **Output:** | Sinusoidal | Non-linear (square / triangle / saw) |
 | **Example:** | ![](res/signal-example-harmonic.png) | ![](res/signal-example-relaxation.png) |
 
-While many synthesizers can output sinusoidal signals, sinusoids lack harmonics and therefore provide limited options for shaping the sound using subtractive filters. Therefore, we will build a relaxation oscillator, which can produce a waveform that is rich in harmonics. Sawtooths are frequently preferred for synthesis because they contain both even and odd harmonics, giving additional flexibility when shaping signals through a filter.[^mit_syw] (For a review of waveform harmonics, refer to [Basic Waveforms](#basic-waveforms).) A sawtooth core also provides flexibility for further development down the line, as it can be processed to produce other waveforms such as rectangular and triangle waves. 
+While many synthesizers can output sinusoidal signals, sinusoids lack harmonics and therefore provide limited options for shaping the sound using subtractive filters. Therefore, we will build a relaxation oscillator, which can produce a waveform that is rich in harmonics. Sawtooths are frequently preferred for synthesis because they contain both even and odd harmonics, giving additional flexibility when shaping signals through a filter.[^mit_syw] (For a review of waveform harmonics, refer to [Basic Waveforms](#basic-waveforms).) A sawtooth core also provides flexibility for further development down the line, as it can be processed to produce other waveforms such as square and triangle waves. 
 
 A quick Google search will provide many relaxation oscillator designs. We will use a relatively simple sawtooth core design sourced from [Moritz Klein's YouTube channel](https://www.youtube.com/watch?v=QBatvo8bCa4). In order to understand how it works, we need to learn about comparators and hysteresis.
 
@@ -753,7 +783,7 @@ _Setting the reference to 3V via voltage dividers [[Falstad]](https://tinyurl.co
 #### Hysteretic Comparators
 What if we wanted more than one trip point? That is, what if we wanted the comparator output to swing "high" at one voltage, but swing "low" at a different voltage? This is known as "hysteresis", and it is the key to creating a relaxation oscillator!
 
-First, we need to develop our intuition about what a [voltage divider]() does. Imagine a voltage divider as "dividing" the voltage between two points. Typically, this is a fixed voltage rail, such as our 12V VCC, and GND; the output exists between the two resistors and depends on their ratio. However, what if we moved this second side, so that it wasn't connected to GND? In that case, the output would still be set "between" the two resistors, but with the endpoints shifted. You can see this principle demonstrated in the three voltage dividers below, where (due to the equal resistances) the output voltage is always halfway between the endpoints.
+First, we need to develop our intuition about what a [voltage divider](#12-electronics) does. Imagine a voltage divider as "dividing" the voltage between two points. Typically, this is a fixed voltage rail, such as our 12V VCC, and GND; the output exists between the two resistors and depends on their ratio. However, what if we moved this second side, so that it wasn't connected to GND? In that case, the output would still be set "between" the two resistors, but with the endpoints shifted. You can see this principle demonstrated in the three voltage dividers below, where (due to the equal resistances) the output voltage is always halfway between the endpoints.
 
 <img src="res/voltage-div-shifting.png" height=250/>
 
@@ -827,7 +857,7 @@ Importantly, the above circuit uses +12V and 0V, and **not** -12V, for powering 
 
  _Connecting an RC network to the output of the comparator makes a "triangle" waveform, using the comparator as the supply. [[Falstad]](https://tinyurl.com/2qw5vgww)_
   
- This looks roughly the same as the input we've been using on the hysteretic comparator, so what if we used it (the capacitor voltage) to replace the voltage source? We would get a self-oscillating circuit!
+ This looks roughly the same as the input we've been using on the hysteretic comparator, so what if we used the capacitor voltage to replace the voltage source? We would get a self-oscillating circuit!
  
 <img src="res/tri-core-falstad.png" height=300 />
 
@@ -857,7 +887,7 @@ A triangle wave is symmetric — it looks the same on the "charge" and "discharg
 
 _A triangle wave with faster rise times becomes a sawtooth wave._
 
-This is useful. If we can make the current flow _into_ the capacitor (during charging) _faster_ than the current flowing _out_ of the capacitor (during discharge), then we can create asymmetries in the charging and discharging times. The easiest way to do this is with a **diode**. 
+This is useful. If we can make the current flow _into_ the capacitor (while charging) _faster_ than the current flowing _out_ of the capacitor (while discharging), then we can create asymmetries in the charging and discharging times. The easiest way to do this is with a **diode**. 
 
 Diodes allow current to flow solely in the direction they point toward, and (mostly) prevent current from flowing backward. This gives us the ability to specify unique paths for current flow during the charge and discharge phases. In particular, if we place a single diode with no resistors in its feedback path, we'll create a short-circuit that quickly charges the capacitor when the comparator output is high, yet acts like an "open" (disconnect) when the output is low. This means that the capacitor will still discharge through the 15kΩ resistor, and current will only follow the short-circuit path through the diode during charging.
 
@@ -895,7 +925,7 @@ Additionally, the oscillator is tricky to make because, beyond the basics, it ma
 
 _Diode parasitics cause a "spiked" sawtooth waveform. The diode pulls charge from the capacitor when it turns off. [[Falstad]](https://tinyurl.com/2kdza9qe)_
 
-Schottky diodes seem to have higher diode capacitances, and you'll have to check the datasheet to find out how much parasitic capacitance a particular diode will have. The 1N4148 in the BOM is recommended, as it minimizes parasitics a lot; using something like a 1N4007 will make it noticeably bad. Also note that you can increase the capacitor value to make it "stronger" than the diode parasitic capacitance, but this is only good up to a point.
+Schottky diodes seem to have higher diode capacitances, and you'll have to check the datasheet to find out how much parasitic capacitance a particular diode will have. The 1N4148 in the [BOM](#202-bill-of-materials-bom) is recommended, as it minimizes parasitics a lot; using something like a 1N4007 will make it noticeably bad. Also note that you can increase the capacitor value to make it "stronger" than the diode parasitic capacitance, but this is only good up to a point.
 
 
 ### Adding Voltage Control
@@ -926,7 +956,7 @@ While Ohm's law places current as proportional to voltage across a resistor, a B
 
 More specifically, when voltage exists to support it, current _approximately_[^pcheung] follows:
 
-$$I_C = I_E = I_s e^{\frac{V_{BE}}{V_T}}$$
+$$I_C \approx I_E \approx I_s e^{\frac{V_{BE}}{V_T}}$$
 
 where
 
@@ -1060,7 +1090,7 @@ One way to do this is via a _passive mixer_, which outputs a weighted average of
 
 
 #### Passive Mixing
-Typically, a [voltage divider]() is considered with a single input, and the other end is connected to 0V (GND). This simplifies the equation to the familiar
+Typically, a [voltage divider](#12-electronics) is considered with a single input, and the other end is connected to 0V (GND). This simplifies the equation to the familiar
 
 $$V_{out} = V_{in} \frac{R_2}{R_1 + R_2}$$
 
@@ -1291,9 +1321,9 @@ However, when we change $R_C$ = 4kΩ, the output "shift" for the same input is n
 
 | $V_{be}$ | $I_C$ | $R_C$ | $V_{R_C}$ | $\Delta V_{out}$ |
 |----------|-------|-------|-----------|-----------|
-| -5 mV | 0.824 mA | 4k | 3.3 V | -0.7 V |
+| 0.595 V | 0.824 mA | 4k | 3.3 V | -0.7 V |
 | 0.6 V | 1 mA | 4k | 4 V | | 
-| +5 mV | 1.214 mA| 4k | 4.9 V | +0.9 V |
+| 0.605 V | 1.214 mA| 4k | 4.9 V | +0.9 V |
 
 Gain is $|A| = \frac{(4.9 - 3.3)V}{0.010V} = \frac{1.6}{0.010} = 160$, increasing linearly with $R_C$. (Notice that we made $R_C$ 4x as large, and 160 = 4*40, our original gain.)
 
@@ -1342,7 +1372,7 @@ _Increasing the offset by +36mV (see the input scope average = 636mV) causes sim
 
 It should be cautioned that these designs (so far) are not ideal to actually implement in a physical design. Without any current limiting, the risks of short-circuiting a transistor are very high. (Not that you can't do it — it may burn or blow up, though. Be ready to kill the power, and don't leave these circuits unattended!)
 
-Our previous approach of installing current-limiting resistors would address some issues, but the interaction changes the transistor behavior by introducing a phenomenon called "degeneration". Despite its advantages (eg. increased linear input range and temperature stability), degeneration adds complexity that isn't essential to build our amplifier. However, it should be considered for [future designs]() once you have a working synth.
+Our previous approach of installing current-limiting resistors would address some issues, but the interaction changes the transistor behavior by introducing a phenomenon called "degeneration". Despite its advantages (eg. increased linear input range and temperature stability), degeneration adds complexity that isn't essential to build our amplifier. However, it should be considered for [future designs](#30-future-work) once you have a working synth.
 
 
 ##### Limits to Gain
@@ -1386,7 +1416,7 @@ which is below GND! Open the simulation and hover over the second BJT to see tha
 
 _This circuit doesn't seem like it should saturate, considering its DC input; however, with an input oscillating about 0.675V and -300x ideal gain, it saturates and distorts. [[Falstad]](https://tinyurl.com/2l8yz2gc)_
 
-Note this *might* be something you want [in future designs]() — audio is a field where distortion can be a good thing! For now, though, we're looking to amplify without altering the sound much, so we will try to avoid saturation.
+Note this *might* be something you want [in future designs](#30-future-work) — audio is a field where distortion can be a good thing! For now, though, we're looking to amplify without altering the sound much, so we will try to avoid saturation.
 
 Finally, the biggest problem these designs suffer from is that the output signal shifts as gain changes. You might have noticed this as you changed the base voltage offset: small gains cause small average voltage drops, with outputs oscillating near the positive rail; large gains cause large average voltage drops, with output oscillating closer to 0V. If we are going to implement variable gain into our amplifier, we need a signal that is predictable and constant. A differential pair (which we are building toward) will give us the tools to create constant-offset output, even with changing gain.
 
@@ -1820,7 +1850,7 @@ Adding this into our envelope generator has a catch: whereas in the past, we've 
 
 _Buffering the DS signal, then inverting it via an inverting op-amp. [[Falstad]](https://tinyurl.com/2eoqolkd)_
 
-Now we just need to mix (add) the signals together, which we've done before (in the [Oscillator]()) using a modified voltage divider! We can simplify the schematic by using node names to reference our signals from earlier; the resulting output resembles an ADSR!
+Now we just need to mix (add) the signals together, which we've done before (in the [Oscillator](#23-the-oscillator)) using a modified voltage divider! We can simplify the schematic by using node names to reference our signals from earlier; the resulting output resembles an ADSR!
 
 <img src="res/ar-plus-dsinv-issue.png" height=300 />
 
@@ -1846,7 +1876,7 @@ $$A = 1 + \frac{R_f}{R_g}$$
 
 In fact, the op-amp buffer we've been building throughout this project is actually a specific implementation of a _non-inverting op-amp_ configuration: If we let $R_f = 0$ and $R_g = \infty$, then the gain becomes $A = 1 + \frac{0}{\infty} = 1$ and the resulting schematic is electrically equivalent to a buffer. (Replace $R_f$ with a wire (short), and disconnect (open) $R_g$ entirely.) In this case, we want a gain of 2, so we'll make $R_f$ twice the size of $R_g$. 
 
-> Note: You *could* also size $R_f$ to get gain slightly larger than 2. Because the trigger for the Attack Flag is at 11V, our waveform only gets 11V peak, not 12V. Scaling would make up for this. However, when sustain is set to output at 100% (low resistance, doesn't cut original AR), this effect disappears and you would then be _above_ 12V. This can be mitigated via intelligent sizing of the current-limiting resistor that is in series with the Sustain potentiometer; but is beyond the scope for this build guide. It's a good [future improvement to implement](), though!
+> Note: You *could* also size $R_f$ to get gain slightly larger than 2. Because the trigger for the Attack Flag is at 11V, our waveform only gets 11V peak, not 12V. Scaling would make up for this. However, when sustain is set to output at 100% (low resistance, doesn't cut original AR), this effect disappears and you would then be _above_ 12V. This can be mitigated via intelligent sizing of the current-limiting resistor that is in series with the Sustain potentiometer; but is beyond the scope for this build guide. It's a good [future improvement to implement](#30-future-work), though!
 
 
 <img src="res/adsr-noninv-opamp.png" height=300 />
@@ -1882,7 +1912,7 @@ Of course, at minimum, $R_{in} \leq R_f$ or else the comparator won't trip. To s
 
 _Changing the comparator to a hysteretic comparator. R={10k, 12k} gives trip points ~ {1V, 11V}. [[Falstad]](https://tinyurl.com/2o2jc669)_
 
-> More [future work]() opportunities: The hysteretic window can be shifted vertically, to be symmetric about some value other than 6V. You might choose to bias toward lower "LOW" thresholds, or higher "HIGH" thresholds as an improvement to the ADSR envelope.
+> More [future work](#30-future-work) opportunities: The hysteretic window can be shifted vertically, to be symmetric about some value other than 6V. You might choose to bias toward lower "LOW" thresholds, or higher "HIGH" thresholds as an improvement to the ADSR envelope.
 
 This creates a new, albeit better, problem: the output of the ADSR now swings negative. Ending the DS "subtraction" early caused a "spike", but leaving it for too long causes a "dip" below 0V. The original image showing the output was "clipped" at 0V, but zooming out shows that the output _does_, in fact, go negative. The [simulation](https://tinyurl.com/2o2jc669) from above shows this flaw, too.
 
@@ -1941,12 +1971,14 @@ Give every breadboard a solid power supply connection, or else the individual su
 It's a scary process, but you should be able to get a full synthesizer system working pretty quickly! Here's a [YouTube video](https://youtu.be/DtJC3cJHXis) showing the system, and what yours might look and sound like. Good luck!
 
 ## 3.0 Future Work
-_**Under Construction**_
 
-Still need to add all of this. The document is littered with "future work" suggestions, so I need to Ctrl+F and add those in here.
+Due to trade-offs in complexity, depth, and accessibility, there are many opportunities where the synth's design can be improved. Some of these opportunities are explicitly mentioned throughout the build process — for example, the inclusion of higher-order filters or additional oscillators — while others will become apparent as you progress as an engineer and reflect on the design. (For an example, consider that the tail resistor in the amplifier subsystem makes for a non-ideal current source.) 
 
-### Additional Modules
-> Low frequency oscillators (LFOs), white noise generators, ring modulators, and glides (portamento). LFOs are used to modulate the control voltages to the other modules (VCO, VCF, and VCA) to provide tremolo or vibrato effects. White noise generators can be used as additional signal source, usually mixed with the output of the VCO to add the whoosh of a wind instrument or the the crash of a cymbal or drum. Ring modulators are basically analog multipliers that create very weird effects, but are important for synthesizing things like bell sounds. Glides are used on the inputs of VCOs to provide trombone-like slides from note to note.
+In general, these opportunities are omitted because they are not absolutely necessary to build a synth. If this is your first system design project, it's already difficult enough! However, as you master this material, you'll find you are able to understand and implement these potential improvements, which will improve the design, make it "yours," and make you a better engineer. 
+
+As you iterate, please update this guide with your improvements, suggestions, and discoveries! This is made for future students to learn from, and in this way, it will continue to grow as a resource for the next generation of audio enthusiasts. 
+
+Happy synth building! :)
 
 # References & Notes
 [^mit_syw]: From [So You Want to Build a Synthesizer MIT](http://web.mit.edu/klund/www/weblatex/node2.html)
